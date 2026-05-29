@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+  <head>
+    <link rel="icon" href="images/logo.png" />
+    <title>Học HTML cơ bản</title>
+    <link rel="stylesheet" type="text/css" href="style.css" />
+  </head>
+  <body>
+    <a href="index.html">Home</a> | <a href="list.html">List</a> |
+    <a href="table.html">Table</a> |
+    <h3>BIỂU MẪU</h3>
+
+    <form action="register.html" method="get" enctype="multipart/form-data">
+      <fieldset>
+        <legend>ĐĂNG KÝ TÀI KHOẢN</legend>
+        <p>
+          Họ và tên:
+          <input type="text" name="name" />
+        </p>
+        <p>
+          Username:
+          <input type="text" name="user" />
+        </p>
+        <p>
+          Password:
+          <input type="password" />
+        </p>
+        <p>
+          Ngày sinh:
+          <input type="date" />
+        </p>
+        <p>
+          Giới tính: <input type="radio" name="sex" />Nam
+          <input type="radio" name="sex" />Nữ
+        </p>
+        <p>
+          Sở thích: <input type="checkbox" />Thể thao
+          <input type="checkbox" />Ẩm thực <input type="checkbox" />Du lịch
+          <input type="checkbox" />Film
+        </p>
+        <p>
+          Trình độ:
+          <select>
+            <option>Phổ thông</option>
+            <option>Trung cấp</option>
+            <option>Cao đẳng</option>
+            <option>Đại học</option>
+            <option>Khác</option>
+          </select>
+        </p>
+        <p>
+          Ảnh đại diện:
+          <input type="file" multiple />
+        </p>
+        <p>Giới thiệu bản thân:</p>
+        <textarea></textarea>
+        <p>
+          <button type="submit">Đăng ký</button>
+          <button type="reset">Nhập lại</button>
+        </p>
+      </fieldset>
+    </form>
+  </body>
+</html>

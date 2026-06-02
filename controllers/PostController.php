@@ -122,6 +122,25 @@ class PostController
     }
 
     /**
+     * GET /admin/posts/{id} — Chi tiết bài viết (admin)
+     */
+    public function adminDetail(int $id): void
+    {
+        requireAdmin();
+        $post = $this->postModel->findById($id);
+
+        if (!$post) {
+            setFlash('error', 'Bài viết không tồn tại.');
+            redirect(BASE_URL . '/admin/posts');
+            return;
+        }
+
+        $comments  = $this->commentModel->getByPost($id);
+        $pageTitle = 'Chi tiết: ' . sanitize($post['title']);
+        require_once __DIR__ . '/../views/admin/posts/detail.php';
+    }
+
+    /**
      * GET /admin/posts/create — Form thêm bài viết
      */
     public function adminCreate(): void

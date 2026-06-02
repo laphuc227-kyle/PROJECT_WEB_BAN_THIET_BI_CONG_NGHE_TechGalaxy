@@ -3,9 +3,9 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/BaseModel.php';
 
-class Post extends BaseModel
+class Comment extends BaseModel
 {
-    protected string $table = 'posts';
+    protected string $table = 'comments';
 
     public function __construct()
     {
@@ -13,119 +13,58 @@ class Post extends BaseModel
     }
 
     /**
-     * Lấy tất cả bài viết có status = published (dùng cho user)
+     * Lấy tất cả comment đã duyệt của một bài viết
      */
-    public function getPublished(int $page = 1, int $perPage = 6): array
-    {
-        return $this->paginate($page, $perPage, ['status' => 'published']);
-    }
-
-    /**
-     * Lấy bài viết theo slug (dùng cho trang detail)
-     */
-    public function findBySlug(string $slug): array|false
+    public function getByPost(int $postId): array
     {
         $stmt = $this->pdo->prepare(
-            "SELECT p.*, u.name AS author_name, u.avatar AS author_avatar
-             FROM posts p
-             LEFT JOIN users u ON p.author_id = u.id
-             WHERE p.slug = ? AND p.status = 'published'
-             LIMIT 1"
+            "SELECT c.*, u.name AS user_name, u.avatar AS user_avatar
+             FROM comments c
+             LEFT JOIN users u ON c.user_id = u.id
+             WHERE c.post_id = ? AND c.status = 'approved'
+             ORDER BY c.created_at ASC"
         );
-        $stmt->execute([$slug]);
-        return $stmt->fetch(\PDO::FETCH_ASSOC);
-    }
-
-    /**
-     * Lấy bài viết liên quan (cùng tag hoặc 3 bài mới nhất)
-     */
-    public function getRelated(int $postId, int $limit = 3): array
-    {
-        $stmt = $this->pdo->prepare(
-            "SELECT id, title, slug, image, created_at
-             FROM posts
-             WHERE status = 'published' AND id != ?
-             ORDER BY created_at DESC
-             LIMIT ?"
-        );
-        $stmt->execute([$postId, $limit]);
+        $stmt->execute([$postId]);
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
     /**
-     * Lấy N bài mới nhất (dùng cho trang chủ)
+     * Thêm comment mới (mặc định pending, chờ duyệt)
      */
-    public function getLatest(int $limit = 3): array
+    public function addComment(int $postId, int $userId, string $content): int
     {
-        $stmt = $this->pdo->prepare(
-            "SELECT p.id, p.title, p.slug, p.image, p.created_at, u.name AS author_name
-             FROM posts p
-             LEFT JOIN users u ON p.author_id = u.id
-             WHERE p.status = 'published'
-             ORDER BY p.created_at DESC
-             LIMIT ?"
-        );
-        $stmt->execute([$limit]);
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        return $this->insert([
+            'post_id'    => $postId,
+            'user_id'    => $userId,
+            'content'    => sanitize($content),
+            'status'     => 'approved', // Auto-approve; đổi thành 'pending' nếu cần duyệt
+            'created_at' => date('Y-m-d H:i:s'),
+        ]);
     }
 
     /**
-     * Đọc thời gian ước tính (reading time)
+     * Admin: lấy tất cả comment kèm thông tin bài viết
      */
-    public function readingTime(string $content): int
-    {
-        $wordCount = str_word_count(strip_tags($content));
-        return (int) max(1, ceil($wordCount / 200)); // 200 từ/phút
-    }
-
-    /**
-     * Tạo excerpt từ nội dung (loại bỏ HTML)
-     */
-    public function makeExcerpt(string $content, int $length = 150): string
-    {
-        $plain = strip_tags($content);
-        return mb_strlen($plain) > $length
-            ? mb_substr($plain, 0, $length) . '...'
-            : $plain;
-    }
-
-    /**
-     * Admin: lấy tất cả bài viết có phân trang + tìm kiếm
-     */
-    public function adminGetAll(int $page = 1, int $perPage = 10, string $search = ''): array
+    public function adminGetAll(int $page = 1, int $perPage = 20): array
     {
         $offset = ($page - 1) * $perPage;
-        $params = [];
-        $where  = '';
+        $stmt   = $this->pdo->prepare(
+            "SELECT c.*, u.name AS user_name, p.title AS post_title, p.slug AS post_slug
+             FROM comments c
+             LEFT JOIN users u ON c.user_id = u.id
+             LEFT JOIN posts p ON c.post_id = p.id
+             ORDER BY c.created_at DESC
+             LIMIT {$perPage} OFFSET {$offset}"
+        );
+        $stmt->execute();
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
 
-        if ($search !== '') {
-            $where    = 'WHERE p.title LIKE ?';
-            $params[] = "%{$search}%";
-        }
-
-        $sql = "SELECT p.*, u.name AS author_name
-                FROM posts p
-                LEFT JOIN users u ON p.author_id = u.id
-                {$where}
-                ORDER BY p.created_at DESC
-                LIMIT {$perPage} OFFSET {$offset}";
-
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute($params);
-        $items = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-
-        // Đếm tổng
-        $countSql  = "SELECT COUNT(*) FROM posts p {$where}";
-        $countStmt = $this->pdo->prepare($countSql);
-        $countStmt->execute($params);
-        $total = (int) $countStmt->fetchColumn();
-
-        return [
-            'items'       => $items,
-            'total'       => $total,
-            'currentPage' => $page,
-            'perPage'     => $perPage,
-            'totalPages'  => (int) ceil($total / $perPage),
-        ];
+    /**
+     * Duyệt / ẩn comment
+     */
+    public function setStatus(int $id, string $status): bool
+    {
+        return $this->update($id, ['status' => $status]);
     }
 }

@@ -94,7 +94,7 @@ class ReportController
                     o.total, o.status, o.payment_method
              FROM orders o
              LEFT JOIN users u ON o.user_id = u.id
-             WHERE o.status != 'cancelled'
+             WHERE o.status = 'completed'
                AND DATE(o.created_at) BETWEEN ? AND ?
              ORDER BY o.created_at DESC"
         );

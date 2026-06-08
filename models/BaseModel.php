@@ -1,7 +1,4 @@
 <?php
-// File: models/BaseModel.php
-
-// Kích hoạt chế độ kiểm tra kiểu dữ liệu nghiêm ngặt của PHP 8
 declare(strict_types=1);
 
 class BaseModel {

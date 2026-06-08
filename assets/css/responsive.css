@@ -1,0 +1,217 @@
+/* ═══════════════════════════════════════════════════════════════════
+   responsive.css — Media queries cho TechGalaxy
+   Chiến lược: Desktop-first cho main layout,
+               Mobile-first cho từng component nhỏ.
+   Breakpoints:
+     xl:  ≥1280px (large desktop)
+     lg:  ≥992px  (desktop)
+     md:  ≥768px  (tablet landscape)
+     sm:  ≥576px  (tablet portrait)
+     xs:  <576px  (mobile)
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── LARGE DESKTOP (xl) ─────────────────────────────────────────── */
+@media (min-width: 1280px) {
+  .container-xl { max-width: 1240px; }
+}
+
+/* ── DESKTOP ─────────────────────────────────────────────────────── */
+@media (max-width: 1199px) {
+  .hero-title { font-size: 2.6rem; }
+  .hero-image  { max-height: 360px; }
+  .navbar-search { flex: 0 0 200px; }
+}
+
+/* ── TABLET LANDSCAPE (lg) ───────────────────────────────────────── */
+@media (max-width: 991px) {
+  /* Body: remove navbar-height padding for mobile (handled differently) */
+  body { padding-top: calc(var(--navbar-height) + var(--announce-height)); }
+
+  /* Navbar collapse trên mobile */
+  .navbar-tg .container-xl { flex-wrap: wrap; }
+
+  .navbar-collapse {
+    background: white;
+    border-top: 1px solid var(--border);
+    margin: 0 -16px;
+    padding: 12px 16px;
+    box-shadow: var(--shadow);
+  }
+
+  .navbar-nav { gap: 4px !important; }
+
+  .navbar-nav .nav-link { padding: 10px 12px !important; }
+
+  .navbar-search {
+    flex: 1 1 100%;
+    margin: 10px 0;
+  }
+
+  .navbar-actions {
+    display: flex !important;
+    flex-direction: row;
+    padding: 8px 0;
+    border-top: 1px solid var(--border);
+    gap: 8px !important;
+  }
+
+  /* Mega menu → normal dropdown on tablet */
+  .mega-menu {
+    width: 100% !important;
+    position: static !important;
+    transform: none !important;
+    box-shadow: none;
+    border: none;
+    background: var(--bg-light);
+    border-radius: var(--radius-sm);
+    margin-top: 4px;
+  }
+
+  .mega-menu__grid { grid-template-columns: repeat(3, 1fr); }
+
+  /* Hero */
+  .hero-section { min-height: 480px; }
+  .hero-slide { min-height: 480px; padding: 40px 0; }
+  .hero-title  { font-size: 2rem; }
+  .hero-image  { max-height: 280px; }
+  .hero-stats  { gap: 20px; }
+  .hero-stat__number { font-size: 1.3rem; }
+
+  /* Promo banner */
+  .promo-banner { padding: 30px 28px; }
+  .promo-banner__image { height: 70%; right: 20px; }
+  .promo-banner__title { font-size: 1.4rem; }
+
+  /* Trust section: 2 columns */
+  .trust-section .row > div { border-bottom: 1px solid var(--border); padding-bottom: 16px; margin-bottom: 16px; }
+  .trust-section .row > div:last-child { border-bottom: none; }
+
+  /* Footer */
+  .footer-main { padding: var(--space-6) 0 var(--space-5); }
+}
+
+/* ── TABLET PORTRAIT (md) ────────────────────────────────────────── */
+@media (max-width: 767px) {
+  :root { --navbar-height: 60px; }
+
+  body { padding-top: calc(var(--navbar-height) + var(--announce-height)); }
+
+  /* Announcement bar: chỉ 1 dòng */
+  .announcement-bar { font-size: 0.72rem; }
+
+  /* Hero: stack content lên trên, ảnh ẩn */
+  .hero-section { min-height: auto; }
+  .hero-slide {
+    min-height: 420px;
+    flex-direction: column;
+    text-align: center;
+    align-items: flex-start;
+    padding: 40px 0;
+  }
+
+  .hero-content { text-align: left; }
+  .hero-image-wrap { display: none; } /* Ẩn ảnh sản phẩm trên mobile nhỏ */
+
+  .hero-title { font-size: 1.8rem; }
+  .hero-subtitle { font-size: 0.9rem; }
+  .hero-actions { flex-direction: column; align-items: flex-start; gap: 10px; }
+
+  .btn-hero-primary,
+  .btn-hero-outline { padding: 12px 24px; font-size: 0.9rem; }
+
+  .hero-stats { gap: 16px; flex-wrap: wrap; }
+
+  /* Categories: 3 cột trên tablet */
+  .categories-section .col { flex: 0 0 33.33%; }
+
+  /* Product cards: 2 cột */
+  /* (Bootstrap grid tự xử lý) */
+
+  /* Promo banner: ẩn ảnh sản phẩm */
+  .promo-banner__image { display: none; }
+  .promo-banner { padding: 28px 24px; min-height: auto; }
+
+  /* Blog: 1 cột */
+  .blog-section .col-md-4 { flex: 0 0 100%; max-width: 100%; }
+
+  /* Footer */
+  .footer-brand { text-align: center; }
+  .footer-social { justify-content: center; }
+}
+
+/* ── MOBILE (sm) ─────────────────────────────────────────────────── */
+@media (max-width: 575px) {
+  :root { --navbar-height: 58px; }
+
+  /* Typography */
+  .section-title { font-size: 1.4rem; }
+
+  /* Announcement bar: ẩn trên mobile rất nhỏ */
+  .announcement-bar { display: none; }
+  body { padding-top: var(--navbar-height); }
+
+  /* Categories: 3 cột */
+  .category-card { padding: 20px 12px 16px; }
+  .category-card__icon { width: 52px; height: 52px; font-size: 1.3rem; }
+  .category-card__name { font-size: 0.78rem; }
+  .category-card__count { display: none; }
+
+  /* Product card */
+  .product-card__name { font-size: 0.85rem; }
+  .product-card__price { font-size: 0.95rem; }
+
+  /* Hero */
+  .hero-title  { font-size: 1.6rem; }
+  .hero-badge  { font-size: 0.7rem; padding: 5px 10px; }
+
+  /* Promo banner */
+  .promo-banner__title { font-size: 1.2rem; }
+
+  /* Back to top */
+  .back-to-top { bottom: 16px; right: 16px; width: 38px; height: 38px; }
+
+  /* Footer */
+  .footer-links { display: none; } /* collapsed trên mobile rất nhỏ nếu cần */
+  .footer-contact li { font-size: 0.82rem; }
+
+  /* Section gap */
+  .section-gap { padding: var(--space-6) 0; }
+}
+
+/* ── PRINT ───────────────────────────────────────────────────────── */
+@media print {
+  .announcement-bar,
+  .navbar-tg,
+  .back-to-top,
+  .site-footer { display: none !important; }
+
+  body { padding-top: 0 !important; }
+
+  .hero-section { min-height: auto; background: none; color: black; }
+  .hero-title   { color: black; -webkit-text-fill-color: black; }
+}
+
+/* ── ACCESSIBILITY: reduced motion ──────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .hero-image { animation: none; }
+}
+
+/* ── DARK MODE (tuỳ chọn, uncomment nếu cần) ────────────────────── */
+/*
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-light: #0F172A;
+    --bg-card:  #1E293B;
+    --text-main: #F1F5F9;
+    --text-muted: #94A3B8;
+    --border: #334155;
+    --white: #1E293B;
+  }
+}
+*/

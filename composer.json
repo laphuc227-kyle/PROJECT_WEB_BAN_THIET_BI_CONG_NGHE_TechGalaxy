@@ -1,0 +1,15 @@
+{
+    "name": "techgalaxy/e-commerce",
+    "description": "Dự án Website bán hàng TechGalaxy PHP MVC Pure",
+    "type": "project",
+    "require": {
+        "php": ">=7.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "Config\\": "config/",
+            "Controllers\\": "controllers/",
+            "Models\\": "models/"
+        }
+    }
+}

@@ -6,6 +6,7 @@
 require_once __DIR__ . '/config/app.php';
 require_once __DIR__ . '/includes/helpers.php';
 
+
 $basePath = parse_url(BASE_URL, PHP_URL_PATH) ?: '';
 $uri      = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 $path     = '/' . trim((string) preg_replace('#^' . preg_quote($basePath, '#') . '#', '', $uri), '/');

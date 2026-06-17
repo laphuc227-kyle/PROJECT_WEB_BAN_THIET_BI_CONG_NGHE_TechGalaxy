@@ -1,22 +1,12 @@
 <?php
-
-namespace Models;
-
-use Config\Database;
-use PDO;
+declare(strict_types=1);
 
 /**
  * Model Wishlist
  * Quản lý danh sách yêu thích của người dùng
  */
-class Wishlist
+class Wishlist extends BaseModel
 {
-    private PDO $db;
-
-    public function __construct()
-    {
-        $this->db = Database::getConnection();
-    }
 
     /**
      * Thêm sản phẩm vào Wishlist của người dùng
@@ -31,7 +21,7 @@ class Wishlist
             return ['success' => false, 'message' => 'Sản phẩm đã có trong danh sách yêu thích.'];
         }
 
-        $stmt = $this->db->prepare("
+        $stmt = $this->pdo->prepare("
             INSERT INTO wishlists (user_id, product_id, created_at)
             VALUES (:user_id, :product_id, NOW())
         ");
@@ -42,7 +32,7 @@ class Wishlist
         return [
             'success' => true,
             'message' => 'Đã thêm sản phẩm vào danh sách yêu thích!',
-            'id'      => (int) $this->db->lastInsertId(),
+            'id'      => (int) $this->pdo->lastInsertId(),
         ];
     }
 
@@ -51,7 +41,7 @@ class Wishlist
      */
     public function removeFromWishlist(int $wishlistId): array
     {
-        $stmt = $this->db->prepare("DELETE FROM wishlists WHERE id = :id");
+        $stmt = $this->pdo->prepare("DELETE FROM wishlists WHERE id = :id");
         $stmt->bindParam(':id', $wishlistId, PDO::PARAM_INT);
         $result = $stmt->execute();
 
@@ -66,7 +56,7 @@ class Wishlist
      */
     public function removeByUserAndProduct(int $userId, int $productId): array
     {
-        $stmt = $this->db->prepare("
+        $stmt = $this->pdo->prepare("
             DELETE FROM wishlists WHERE user_id = :user_id AND product_id = :product_id
         ");
         $stmt->bindParam(':user_id',    $userId,    PDO::PARAM_INT);
@@ -84,7 +74,7 @@ class Wishlist
      */
     public function getWishlistByUser(int $userId): array
     {
-        $stmt = $this->db->prepare("
+        $stmt = $this->pdo->prepare("
             SELECT w.id AS wishlist_id, w.created_at AS added_at,
                    p.id AS product_id, p.name, p.slug, p.price, p.sale_price, p.stock, p.status,
                    c.name AS category_name,
@@ -108,7 +98,7 @@ class Wishlist
      */
     public function checkWishlistExists(int $userId, int $productId): int|false
     {
-        $stmt = $this->db->prepare("
+        $stmt = $this->pdo->prepare("
             SELECT id FROM wishlists
             WHERE user_id = :user_id AND product_id = :product_id
             LIMIT 1
@@ -126,7 +116,7 @@ class Wishlist
      */
     public function countByUser(int $userId): int
     {
-        $stmt = $this->db->prepare("
+        $stmt = $this->pdo->prepare("
             SELECT COUNT(*) FROM wishlists
             WHERE user_id = :user_id
         ");

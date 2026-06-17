@@ -1,11 +1,5 @@
 <?php
-
-namespace Controllers;
-
-use Models\Category;
-use Models\Product;
-use Models\ProductImage;
-use Models\Wishlist;
+declare(strict_types=1);
 
 /**
  * ProductController

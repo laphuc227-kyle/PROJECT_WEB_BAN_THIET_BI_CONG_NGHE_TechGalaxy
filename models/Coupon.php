@@ -1,88 +1,110 @@
 <?php
+// File: models/Coupon.php
 declare(strict_types=1);
-
-require_once __DIR__ . '/BaseModel.php';
 
 class Coupon extends BaseModel
 {
     protected string $table = 'coupons';
-
-    public function __construct()
-    {
-        parent::__construct();
-    }
 
     /**
      * Tìm coupon theo code
      */
     public function findByCode(string $code): array|false
     {
-        $stmt = $this->pdo->prepare("SELECT * FROM coupons WHERE code = ? LIMIT 1");
+        $stmt = $this->pdo->prepare(
+            "SELECT * FROM coupons WHERE code = ? LIMIT 1"
+        );
         $stmt->execute([strtoupper(trim($code))]);
-        return $stmt->fetch(\PDO::FETCH_ASSOC);
+        return $stmt->fetch();
     }
 
     /**
-     * Validate coupon — trả về JSON-friendly array
-     *
-     * @param  string $code       Mã giảm giá
-     * @param  float  $orderTotal Tổng đơn hàng (trước giảm giá)
-     * @param  int    $userId     ID user (tương lai: kiểm tra đã dùng chưa)
-     * @return array  ['valid' => bool, 'discount' => float, 'message' => string, 'coupon' => array|null]
+     * Validate coupon
+     * status trong DB là TINYINT: 1 = active, 0 = inactive
      */
-    public function validateCoupon(string $code, float $orderTotal, int $userId): array
-    {
-        // 1. Tìm coupon
+    public function validateCoupon(
+        string $code,
+        float $orderTotal,
+        int $userId
+    ): array {
         $coupon = $this->findByCode($code);
+
         if (!$coupon) {
-            return ['valid' => false, 'discount' => 0, 'message' => 'Mã giảm giá không tồn tại.', 'coupon' => null];
+            return [
+                'valid'    => false,
+                'discount' => 0,
+                'message'  => 'Mã giảm giá không tồn tại.',
+                'coupon'   => null,
+            ];
         }
 
-        // 2. Kiểm tra status = active
-        if ($coupon['status'] !== 'active') {
-            return ['valid' => false, 'discount' => 0, 'message' => 'Mã giảm giá đã bị vô hiệu hoá.', 'coupon' => null];
+        // FIX: schema dùng TINYINT(1), so sánh với 1 thay vì 'active'
+        if ((int) $coupon['status'] !== 1) {
+            return [
+                'valid'    => false,
+                'discount' => 0,
+                'message'  => 'Mã giảm giá đã bị vô hiệu hoá.',
+                'coupon'   => null,
+            ];
         }
 
-        // 3. Kiểm tra ngày còn hiệu lực
+        // Kiểm tra ngày hiệu lực
         $now   = new \DateTime();
         $start = new \DateTime($coupon['start_date']);
         $end   = new \DateTime($coupon['end_date']);
 
         if ($now < $start) {
-            return ['valid' => false, 'discount' => 0, 'message' => 'Mã giảm giá chưa có hiệu lực.', 'coupon' => null];
+            return [
+                'valid'    => false,
+                'discount' => 0,
+                'message'  => 'Mã giảm giá chưa có hiệu lực.',
+                'coupon'   => null,
+            ];
         }
         if ($now > $end) {
-            return ['valid' => false, 'discount' => 0, 'message' => 'Mã giảm giá đã hết hạn.', 'coupon' => null];
-        }
-
-        // 4. Kiểm tra còn lượt dùng
-        if ((int) $coupon['used_count'] >= (int) $coupon['max_uses']) {
-            return ['valid' => false, 'discount' => 0, 'message' => 'Mã giảm giá đã hết lượt sử dụng.', 'coupon' => null];
-        }
-
-        // 5. Kiểm tra min_order
-        if ($orderTotal < (float) $coupon['min_order']) {
-            $minFormatted = formatPrice((float) $coupon['min_order']);
             return [
-                'valid'   => false,
+                'valid'    => false,
                 'discount' => 0,
-                'message' => "Đơn hàng tối thiểu {$minFormatted} để dùng mã này.",
-                'coupon'  => null,
+                'message'  => 'Mã giảm giá đã hết hạn.',
+                'coupon'   => null,
             ];
         }
 
-        // 6. Tính số tiền giảm
+        // Kiểm tra lượt dùng (max_uses = 0 → không giới hạn)
+        if (
+            (int) $coupon['max_uses'] > 0 &&
+            (int) $coupon['used_count'] >= (int) $coupon['max_uses']
+        ) {
+            return [
+                'valid'    => false,
+                'discount' => 0,
+                'message'  => 'Mã giảm giá đã hết lượt sử dụng.',
+                'coupon'   => null,
+            ];
+        }
+
+        // Kiểm tra min_order
+        if ($orderTotal < (float) $coupon['min_order']) {
+            return [
+                'valid'    => false,
+                'discount' => 0,
+                'message'  => 'Đơn hàng tối thiểu ' . formatPrice((float) $coupon['min_order']) . ' để dùng mã này.',
+                'coupon'   => null,
+            ];
+        }
+
+        // Tính discount
         $discount = 0.0;
         if ($coupon['type'] === 'percent') {
-            $discount = round($orderTotal * ((float) $coupon['value'] / 100), 0);
+            $discount = round($orderTotal * ((float) $coupon['value'] / 100));
         } elseif ($coupon['type'] === 'fixed') {
-            $discount = min((float) $coupon['value'], $orderTotal); // không giảm hơn tổng đơn
+            $discount = min((float) $coupon['value'], $orderTotal);
         }
 
         return [
             'valid'    => true,
             'discount' => $discount,
-            'message'  => 'Áp dụng mã giảm giá thành công! Bạn được giảm ' . formatPrice($discount),
+            'message'  => 'Áp dụng thành công! Giảm ' . formatPrice($discount),
             'coupon'   => $coupon,
         ];
     }

@@ -1,16 +1,13 @@
 <?php
 
-namespace Models;
-
-use Config\Database;
-use PDO;
+declare(strict_types=1);
 
 /**
  * Model ProductImage
  * Quản lý bộ sưu tập ảnh của sản phẩm
  * Hỗ trợ upload nhiều ảnh, validate file, đặt ảnh chính
  */
-class ProductImage
+class ProductImage extends BaseModel
 {
     private PDO $db;
 
@@ -22,11 +19,6 @@ class ProductImage
 
     // Kích thước file tối đa: 5MB
     private const MAX_SIZE = 5 * 1024 * 1024;
-
-    public function __construct()
-    {
-        $this->db = Database::getConnection();
-    }
 
     /**
      * Upload và lưu nhiều ảnh cho sản phẩm

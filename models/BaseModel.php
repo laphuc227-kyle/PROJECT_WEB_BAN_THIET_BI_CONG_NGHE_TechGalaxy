@@ -153,4 +153,12 @@ class BaseModel {
         $stmt->execute($params);
         return $stmt->fetchAll();
     }
+
+    /**
+     * Expose $pdo để Controller dùng transaction
+     */
+    public function getPdo(): PDO
+    {
+        return $this->pdo;
+    }
 }

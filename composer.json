@@ -3,7 +3,8 @@
     "description": "Dự án Website bán hàng TechGalaxy PHP MVC Pure",
     "type": "project",
     "require": {
-        "php": ">=7.4"
+        "php": ">=7.4",
+        "phpmailer/phpmailer": "^7.1"
     },
     "autoload": {
         "psr-4": {

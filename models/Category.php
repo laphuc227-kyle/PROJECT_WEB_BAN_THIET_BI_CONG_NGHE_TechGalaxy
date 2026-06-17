@@ -1,30 +1,18 @@
 <?php
-
-namespace Models;
-
-use Config\Database;
-use PDO;
+declare(strict_types=1);
 
 /**
  * Model Category
  * Xử lý toàn bộ thao tác CRUD với bảng `categories`
  */
-class Category
+class Category extends BaseModel
 {
-    private PDO $db;
-
-    public function __construct()
-    {
-        // Lấy kết nối PDO từ class Config\Database (Singleton)
-        $this->db = Database::getConnection();
-    }
-
     /**
      * Lấy tất cả danh mục, sắp xếp theo tên A→Z
      */
     public function getAllCategories(): array
     {
-        $stmt = $this->db->prepare("
+        $stmt = $this->pdo->prepare("
             SELECT c.*, COUNT(p.id) AS product_count
             FROM categories c
             LEFT JOIN products p ON p.category_id = c.id AND p.deleted_at IS NULL
@@ -40,7 +28,7 @@ class Category
      */
     public function getCategoryById(int $id): array|false
     {
-        $stmt = $this->db->prepare("SELECT * FROM categories WHERE id = :id LIMIT 1");
+        $stmt = $this->pdo->prepare("SELECT * FROM categories WHERE id = :id LIMIT 1");
         $stmt->bindParam(':id', $id, PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->fetch(PDO::FETCH_ASSOC);
@@ -57,7 +45,7 @@ class Category
             $slug = $this->generateSlug($name);
         }
 
-        $stmt = $this->db->prepare("
+        $stmt = $this->pdo->prepare("
             INSERT INTO categories (name, slug, description, created_at)
             VALUES (:name, :slug, :description, NOW())
         ");
@@ -66,7 +54,7 @@ class Category
         $stmt->bindParam(':description', $description, PDO::PARAM_STR);
         $stmt->execute();
 
-        return (int) $this->db->lastInsertId();
+        return (int) $this->pdo->lastInsertId();
     }
 
     /**
@@ -78,7 +66,7 @@ class Category
             $slug = $this->generateSlug($name);
         }
 
-        $stmt = $this->db->prepare("
+        $stmt = $this->pdo->prepare("
             UPDATE categories
             SET name = :name, slug = :slug, description = :description, updated_at = NOW()
             WHERE id = :id
@@ -97,7 +85,7 @@ class Category
      */
     public function deleteCategory(int $id): bool
     {
-        $stmt = $this->db->prepare("DELETE FROM categories WHERE id = :id");
+        $stmt = $this->pdo->prepare("DELETE FROM categories WHERE id = :id");
         $stmt->bindParam(':id', $id, PDO::PARAM_INT);
         return $stmt->execute();
     }
@@ -107,7 +95,7 @@ class Category
      */
     public function hasProducts(int $categoryId): bool
     {
-        $stmt = $this->db->prepare("
+        $stmt = $this->pdo->prepare("
             SELECT COUNT(*) FROM products WHERE category_id = :id AND deleted_at IS NULL
         ");
         $stmt->bindParam(':id', $categoryId, PDO::PARAM_INT);

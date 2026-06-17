@@ -1,8 +1,5 @@
 <?php
-
-namespace Controllers;
-
-use Models\Wishlist;
+declare(strict_types=1);
 
 /**
  * WishlistController
@@ -14,7 +11,7 @@ use Models\Wishlist;
  *
  * Tất cả action đều yêu cầu user đã đăng nhập.
  */
-class WishlistController
+class WishlistController 
 {
     private Wishlist $wishlistModel;
 

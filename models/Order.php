@@ -35,10 +35,19 @@ class Order extends BaseModel
     public function getByUserId(int $userId) : array
     {
         $stmt = $this->pdo->prepare(
-            "SELECT *
-            FROM orders
-            WHERE user_id = :user_id
-            ORDER BY created_at DESC"
+            "SELECT
+                o.*,
+                COALESCE(SUM(od.quantity), 0) AS product_count
+            FROM orders o
+
+            LEFT JOIN order_details od
+                ON o.id = od.order_id
+        
+            WHERE o.user_id = :user_id
+
+            GROUP BY o.id
+
+            ORDER BY o.created_at DESC"
         );
         $stmt->execute([':user_id' => $userId]);
 
@@ -119,12 +128,16 @@ class Order extends BaseModel
             $stmt = $this->pdo->prepare(
                 "SELECT 
                     o.*,
-                    u.name,
-                    u.email
+                    u.name as user_name,
+                    u.email as user_email,
+                    COALESCE(SUM(od.quantity), 0) AS product_count
                 FROM orders o
                 JOIN users u
                     ON o.user_id = u.id
+                LEFT JOIN order_details od
+                    ON o.id = od.order_id
                 WHERE o.status  = :status
+                GROUP BY o.id
                 ORDER BY o.created_at DESC"
             );
             $stmt->execute([':status' => $status]);
@@ -132,11 +145,15 @@ class Order extends BaseModel
             $stmt = $this->pdo->prepare(
                 "SELECT 
                     o.*,
-                    u.name,
-                    u.email
+                    u.name as user_name,
+                    u.email as user_email,
+                    COALESCE(SUM(od.quantity), 0) AS product_count
                 FROM orders o
                 JOIN users u
                     ON o.user_id = u.id
+                LEFT JOIN order_details od
+                    ON o.id = od.order_id
+                GROUP BY o.id
                 ORDER BY o.created_at DESC"
             );
             $stmt->execute();
@@ -154,14 +171,25 @@ class Order extends BaseModel
         $stmt = $this->pdo->prepare(
         "SELECT
             o.*,
-            u.name,
-            u.email,
-            u.phone
-         FROM orders o
-         JOIN users u
+
+            u.name  AS user_name,
+            u.email AS user_email,
+            u.phone AS user_phone,
+
+            a.name AS receiver_name,
+            a.phone AS receiver_phone,
+            a.province,
+            a.district,
+            a.ward,
+            a.detail
+
+        FROM orders o
+        JOIN users u
             ON o.user_id = u.id
-         WHERE o.id = :id
-         LIMIT 1"
+        LEFT JOIN addresses a
+            ON o.address_id = a.id
+        WHERE o.id = :id
+        LIMIT 1"
         );
 
         $stmt->execute([':id' => $orderId]);
@@ -171,4 +199,103 @@ class Order extends BaseModel
         return $result ?: null;
 
     }
+
+
+    public function getById(int $orderId): ?array
+    {
+    $stmt = $this->pdo->prepare(
+        "SELECT *
+         FROM orders
+         WHERE id = :id
+         LIMIT 1"
+    );
+
+    $stmt->execute([
+        ':id' => $orderId
+    ]);
+
+    $result = $stmt->fetch();
+
+    return $result ?: null;
+    }
+
+    
+    public function countTodayOrders(): int
+    {
+    $stmt = $this->pdo->query(
+        "SELECT COUNT(*)
+         FROM orders
+         WHERE DATE(created_at)=CURDATE()"
+    );
+
+    return (int)$stmt->fetchColumn();
+    }
+
+
+    public function getTodayRevenue(): float
+    {
+    $stmt = $this->pdo->query(
+        "SELECT COALESCE(SUM(total),0)
+         FROM orders
+         WHERE status='completed'
+         AND DATE(created_at)=CURDATE()"
+    );
+
+    return (float)$stmt->fetchColumn();
+    }
+
+
+
+    public function countItems(int $orderId): int
+    {
+    $stmt = $this->pdo->prepare(
+        "SELECT COALESCE(
+            SUM(quantity),
+            0
+        )
+        FROM order_details
+        WHERE order_id = :id"
+    );
+
+    $stmt->execute([
+        ':id' => $orderId
+    ]);
+
+    return (int)$stmt->fetchColumn();
+    }
+
+
+
+    public function countOrders(string $status = ''): int
+    {
+        if ($status !== '') {
+
+            $stmt = $this->pdo->prepare(
+                "
+                SELECT COUNT(*)
+                FROM orders
+                WHERE status = :status
+                "
+            );
+
+            $stmt->execute([
+                ':status' => $status
+            ]);
+
+        } else {
+
+            $stmt = $this->pdo->prepare(
+                "
+                SELECT COUNT(*)
+                FROM orders
+                "
+            );
+
+            $stmt->execute();
+        }
+
+        return (int)$stmt->fetchColumn();
+    }
+
+
 }

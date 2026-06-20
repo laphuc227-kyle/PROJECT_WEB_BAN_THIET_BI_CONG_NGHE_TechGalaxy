@@ -22,13 +22,19 @@ class OrderDetail extends BaseModel
                 p.slug,
                 p.sku,
                 pi.image_path
-             FROM order_details od
-             JOIN products p
+            FROM order_details od
+            JOIN products p
                 ON od.product_id = p.id
-             LEFT JOIN product_images pi
+            LEFT JOIN (
+                    SELECT
+                        product_id,
+                        MIN(image_path) AS image_path
+                    FROM product_images
+                    GROUP BY product_id
+                ) pi
                 ON p.id = pi.product_id
-                AND pi.is_primary = 1
-             WHERE od.order_id = :order_id"
+            WHERE od.order_id = :order_id
+            ORDER BY od.id ASC"
         );
 
         $stmt->execute([
@@ -74,5 +80,22 @@ class OrderDetail extends BaseModel
                 (int)$item['price']
             );
         }
+    }
+    public function getSoldQuantity(int $productId): int
+    {
+    $stmt = $this->pdo->prepare(
+        "SELECT COALESCE(
+            SUM(quantity),
+            0
+        )
+        FROM order_details
+        WHERE product_id = :id"
+    );
+
+    $stmt->execute([
+        ':id' => $productId
+    ]);
+
+    return (int)$stmt->fetchColumn();
     }
 }

@@ -24,7 +24,7 @@ class OrderController
             header('Location: /login');
             exit;
         }
-        return (int) $_SESSION['user_id'];
+        return (int) $_SESSION['user']['id'];
     }
 
     // GET /checkout
@@ -227,23 +227,98 @@ class OrderController
     // POST /my-orders/{id}/cancel
     public function cancelOrder(int $orderId): void
     {
-        $userId  = $this->getCurrentUserId();
-        $success = $this->orderModel->cancelOrder($orderId, $userId);
+    $userId = $this->getCurrentUserId();
 
-        $_SESSION[$success ? 'success' : 'error'] = $success
-            ? 'Đã huỷ đơn hàng thành công.'
-            : 'Không thể huỷ đơn hàng này.';
+    $pdo = $this->orderModel->getPdo();
 
-        header('Location: /my-orders');
-        exit;
+    try {
+
+        $pdo->beginTransaction();
+
+        $items = $this->orderDetailModel->getByOrderId($orderId);
+
+        $success = $this->orderModel->cancelOrder(
+            $orderId,
+            $userId
+        );
+
+        if (!$success) {
+            throw new RuntimeException(
+                'Không thể huỷ đơn hàng.'
+            );
+        }
+
+        foreach ($items as $item) {
+
+            $stmt = $pdo->prepare(
+                "UPDATE products
+                 SET stock = stock + :qty
+                 WHERE id = :id"
+            );
+
+            $stmt->execute([
+                ':qty' => $item['quantity'],
+                ':id'  => $item['product_id']
+            ]);
+        }
+
+        $pdo->commit();
+
+        $_SESSION['success'] =
+            'Đã huỷ đơn hàng thành công.';
+
+    } catch (Exception $e) {
+
+        $pdo->rollBack();
+
+        $_SESSION['error'] =
+            'Không thể huỷ đơn hàng.';
     }
+
+    header('Location: /my-orders');
+    exit;
+    }
+
+
+
+    public function getOrderStats(): array
+{
+    return [
+
+        'total' =>
+            $this->orderModel->countOrders(),
+
+        'pending' =>
+            $this->orderModel->countOrders(
+                'pending'
+            ),
+
+        'shipping' =>
+            $this->orderModel->countOrders(
+                'shipping'
+            ),
+
+        'completed' =>
+            $this->orderModel->countOrders(
+                'completed'
+            )
+    ];
+}
 
     // GET /admin/orders
     public function adminIndex(): void
     {
-        $status = trim($_GET['status'] ?? '');
-        $orders = $this->orderModel->getAllOrders($status);
-        require __DIR__ . '/../views/admin/orders/index.php';
+        $status = trim(
+            $_GET['status'] ?? ''
+        );
+
+        $orders = $this->orderModel
+            ->getAllOrders($status);
+
+        $stats = $this->getOrderStats();
+
+        require __DIR__
+            . '/../views/admin/orders/index.php';
     }
 
     // GET /admin/orders/{id}
@@ -257,20 +332,45 @@ class OrderController
         }
 
         $items = $this->orderDetailModel->getByOrderId($orderId);
+
         require __DIR__ . '/../views/admin/orders/detail.php';
     }
 
     // POST /admin/orders/{id}/status
     public function adminUpdateStatus(int $orderId): void
     {
-        $status  = trim($_POST['status'] ?? '');
-        $success = $this->orderModel->updateStatus($orderId, $status);
+        $status = trim($_POST['status'] ?? '');
 
-        $_SESSION[$success ? 'success' : 'error'] = $success
-            ? 'Cập nhật trạng thái thành công.'
-            : 'Trạng thái không hợp lệ.';
+        $allowedStatuses = [
+        'pending',
+        'confirmed',
+        'shipping',
+        'delivered',
+        'completed',
+        'cancelled'
+        ];
+
+        if (!in_array($status, $allowedStatuses, true)) {
+
+            $_SESSION['error'] = 'Trạng thái không hợp lệ.';
+
+            header("Location: /admin/orders/{$orderId}");
+            exit;
+        }
+
+        $success = $this->orderModel->updateStatus(
+            $orderId,
+            $status
+        );
+
+        if ($success) {
+            $_SESSION['success'] = 'Cập nhật trạng thái thành công.';
+        } else {
+            $_SESSION['error'] = 'Không thể cập nhật trạng thái.';
+        }
 
         header("Location: /admin/orders/{$orderId}");
         exit;
     }
+
 }

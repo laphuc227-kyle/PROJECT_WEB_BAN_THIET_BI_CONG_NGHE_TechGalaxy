@@ -23,6 +23,79 @@ require __DIR__ . '/../../includes/header.php';
 require __DIR__ . '/../../includes/navbar.php';
 ?>
 
+<style>
+
+body{
+    background:#f5f7fa;
+}
+
+.cart-card{
+    border:none;
+    border-radius:18px;
+    overflow:hidden;
+}
+
+.cart-summary{
+    position:sticky;
+    top:90px;
+    border:none;
+    border-radius:18px;
+    overflow:hidden;
+}
+
+.cart-summary .card-header{
+    background:linear-gradient(
+        135deg,
+        #0d6efd,
+        #0a58ca
+    );
+    color:#fff;
+    border:none;
+}
+
+.cart-item{
+    transition:.2s;
+}
+
+.cart-item:hover{
+    background:#f8fbff;
+}
+
+.product-thumb{
+    width:72px;
+    height:72px;
+    object-fit:cover;
+    border-radius:12px;
+    border:1px solid #eee;
+}
+
+.qty-input{
+    font-weight:600;
+}
+
+.checkout-btn{
+    height:54px;
+    font-size:1.05rem;
+    border-radius:12px;
+}
+
+.total-price{
+    font-size:1.7rem;
+    font-weight:700;
+}
+
+.price-highlight{
+    color:#0d6efd;
+}
+
+.summary-box{
+    background:#f8f9fa;
+    border-radius:12px;
+    padding:15px;
+}
+
+</style>
+
 <main class="py-5">
 <div class="container-xl">
 
@@ -36,7 +109,25 @@ require __DIR__ . '/../../includes/navbar.php';
     </ol>
   </nav>
 
-  <h2 class="fw-bold mb-4">
+  <div class="alert alert-primary border-0 shadow-sm mb-4">
+
+    <div class="d-flex align-items-center">
+
+        <i class="fa-solid fa-bolt fa-2x me-3"></i>
+
+        <div>
+
+            <strong>Mua sắm an toàn tại TechGalaxy</strong>
+
+            <div class="small">
+                Miễn phí vận chuyển cho đơn từ 500.000₫
+            </div>
+
+        </div>
+
+    </div>
+
+  </div>
     <i class="fa-solid fa-cart-shopping me-2 text-primary"></i>
     Giỏ hàng
     <?php if (!empty($items)): 
@@ -51,10 +142,12 @@ require __DIR__ . '/../../includes/navbar.php';
   <?php if (empty($items)): ?>
   <!-- ═══════════════ GIỎ TRỐNG ═══════════════ -->
   <div class="text-center py-5">
-    <i class="fa-solid fa-cart-shopping fa-4x text-muted d-block mb-3"></i>
+    <div class="mb-4">
+    <i class="fa-solid fa-cart-shopping" style="font-size:100px; color:#d0d7de;"></i>
+  </div>
     <h5 class="text-muted mb-2">Giỏ hàng của bạn đang trống</h5>
     <p class="text-muted mb-4">Hãy thêm sản phẩm để tiếp tục mua sắm.</p>
-    <a href="<?= BASE_URL ?>/shop" class="btn btn-primary btn-lg">
+    <a href="<?= BASE_URL ?>/shop" class="btn btn-primary btn-lg px-5">
       <i class="fa-solid fa-store me-2"></i>Tiếp tục mua sắm
     </a>
   </div>
@@ -65,7 +158,7 @@ require __DIR__ . '/../../includes/navbar.php';
 
     <!-- ══ CỘT TRÁI: Bảng sản phẩm ══════════════ -->
     <div class="col-lg-8">
-      <div class="card border-0 shadow-sm">
+      <div class="card cart-card shadow">
         <div class="card-body p-0">
           <div class="table-responsive">
             <table class="table align-middle mb-0">
@@ -94,9 +187,8 @@ require __DIR__ . '/../../includes/navbar.php';
                   <td class="ps-3">
                     <a href="<?= BASE_URL ?>/product/<?= htmlspecialchars($item['slug']) ?>">
                       <img src="<?= $imgSrc ?>"
-                           alt="<?= htmlspecialchars($item['name']) ?>"
-                           width="64" height="64"
-                           style="object-fit:cover;border-radius:8px;">
+                        alt="<?= htmlspecialchars($item['name']) ?>"
+                        class="product-thumb">
                     </a>
                   </td>
 
@@ -120,7 +212,7 @@ require __DIR__ . '/../../includes/navbar.php';
                   </td>
 
                   <!-- Đơn giá -->
-                  <td class="text-center text-primary fw-semibold">
+                  <td class="text-center fw-bold price-highlight">
                     <?= formatPrice($item['price']) ?>
                   </td>
 
@@ -184,7 +276,7 @@ require __DIR__ . '/../../includes/navbar.php';
 
     <!-- ══ CỘT PHẢI: Tổng đơn hàng ══════════════ -->
     <div class="col-lg-4">
-      <div class="card border-0 shadow-sm" style="position:sticky;top:90px">
+      <div class="card cart-summary shadow">
 
         <div class="card-header bg-white border-bottom fw-bold py-3">
           <i class="fa-solid fa-receipt me-2 text-primary"></i>Tổng đơn hàng
@@ -247,16 +339,28 @@ require __DIR__ . '/../../includes/navbar.php';
                 - <?= formatPrice($discount) ?>
               </span>
             </li>
-            <li class="d-flex justify-content-between py-2 fw-bold fs-5">
-              <span>Tổng cộng</span>
-              <span class="text-primary" id="totalTxt">
-                <?= formatPrice($total) ?>
-              </span>
-            </li>
+            <div class="summary-box mt-3">
+
+                <div class="d-flex justify-content-between align-items-center">
+
+                    <span class="fw-bold">
+                        Tổng cộng
+                    </span>
+
+                    <span
+                        class="text-primary total-price"
+                        id="totalTxt">
+
+                        <?= formatPrice($total) ?>
+
+                    </span>
+
+                </div>
+
+            </div>
           </ul>
 
-          <a href="<?= BASE_URL ?>/checkout"
-             class="btn btn-primary btn-lg w-100 fw-semibold">
+          <a href="<?= BASE_URL ?>/checkout" class="btn btn-primary w-100 fw-bold checkout-btn">
             <i class="fa-solid fa-lock me-2"></i>Đặt hàng ngay
           </a>
 

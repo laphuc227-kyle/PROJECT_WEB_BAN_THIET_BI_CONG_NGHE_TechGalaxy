@@ -1,188 +1,325 @@
 <?php
-// File: views/user/order_complete.php
+declare(strict_types=1);
+
+$pageTitle = 'Đặt hàng thành công';
 
 require_once __DIR__ . '/../../includes/header.php';
 require_once __DIR__ . '/../../includes/navbar.php';
+
+$order = $order ?? [];
+$items = $items ?? [];
+
+if (empty($order)) {
 ?>
 
 <div class="container py-5">
-
-    <div class="text-center mb-5">
-
-        <div class="mb-3">
-            <i
-                class="fa-solid fa-circle-check text-success"
-                style="font-size:80px;">
-            </i>
-        </div>
-
-        <h1 class="text-success">
-            Đặt hàng thành công
-        </h1>
-
-        <p class="text-muted">
-            Cảm ơn bạn đã mua sắm tại cửa hàng.
-        </p>
-
+    <div class="alert alert-danger">
+        Không tìm thấy đơn hàng.
     </div>
+</div>
+<?php
+    require_once __DIR__ . '/../../includes/footer.php';
+    return;
+}
 
-    <div class="row justify-content-center">
+$statusInfo = match ($order['status']) {
 
-        <div class="col-lg-8">
+'pending' => [
+    'class' => 'warning',
+    'icon'  => 'clock',
+    'text'  => 'Chờ xác nhận'
+],
 
-            <div class="card shadow-sm">
+'confirmed' => [
+    'class' => 'info',
+    'icon'  => 'check',
+    'text'  => 'Đã xác nhận'
+],
 
-                <div class="card-header">
-                    <strong>Thông tin đơn hàng</strong>
+'shipping' => [
+    'class' => 'primary',
+    'icon'  => 'truck',
+    'text'  => 'Đang giao'
+],
+
+'completed' => [
+    'class' => 'success',
+    'icon'  => 'circle-check',
+    'text'  => 'Hoàn thành'
+],
+
+'cancelled' => [
+    'class' => 'danger',
+    'icon'  => 'xmark',
+    'text'  => 'Đã huỷ'
+],
+
+default => [
+    'class' => 'secondary',
+    'icon'  => 'circle',
+    'text'  => ucfirst($order['status'])
+]
+
+
+};
+
+$discount = (float)($order['discount'] ?? 0);
+$total    = (float)($order['total'] ?? 0);
+?>
+
+<style>
+
+.order-complete-page{
+    background:
+        linear-gradient(
+            135deg,
+            #f5f7fa 0%,
+            #eef2f7 100%
+        );
+    min-height:100vh;
+}
+
+.success-card{
+    border:none;
+    border-radius:20px;
+}
+
+.success-icon{
+    width:120px;
+    height:120px;
+    border-radius:50%;
+    background:rgba(25,135,84,.12);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin:auto;
+}
+
+.success-icon i{
+    font-size:70px;
+}
+
+.order-card{
+    border:none;
+    border-radius:16px;
+}
+
+.order-card .card-header{
+    background:#0d6efd;
+    color:#fff;
+    border:none;
+}
+
+.product-row:hover{
+    background:#f8f9fa;
+    transition:.2s;
+}
+
+.product-image{
+    width:70px;
+    height:70px;
+    object-fit:cover;
+}
+
+.summary-card{
+    position:sticky;
+    top:20px;
+}
+
+.total-box{
+    background:#0d6efd;
+    color:#fff;
+    border-radius:12px;
+    padding:15px;
+}
+
+</style>
+
+    <main class="order-complete-page py-5">
+
+    ```
+    <div class="container">
+
+        <!-- SUCCESS -->
+
+        <div class="card success-card shadow-lg mb-5">
+
+            <div class="card-body text-center py-5">
+
+                <div class="success-icon mb-4">
+                    <i class="fa-solid fa-circle-check text-success"></i>
                 </div>
 
-                <div class="card-body">
+                <h1 class="fw-bold text-success">
+                    Đặt hàng thành công!
+                </h1>
 
-                    <div class="row mb-3">
+                <p class="text-muted fs-5">
+                    Cảm ơn bạn đã mua sắm tại TechGalaxy.
+                </p>
 
-                        <div class="col-md-6">
-                            <strong>Mã đơn hàng:</strong>
-                            #<?= $order['id'] ?>
-                        </div>
+                <div class="mt-4">
 
-                        <div class="col-md-6">
-                            <strong>Ngày đặt:</strong>
-                            <?= date(
-                                'd/m/Y H:i',
-                                strtotime($order['created_at'])
-                            ) ?>
-                        </div>
+                    <span class="badge bg-primary fs-6 px-4 py-3">
+                        Mã đơn hàng #<?= (int)$order['id'] ?>
+                    </span>
 
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="row g-4">
+
+            <!-- LEFT -->
+
+            <div class="col-lg-8">
+
+                <div class="card order-card shadow-sm mb-4">
+
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fa-solid fa-box me-2"></i>
+                            Thông tin đơn hàng
+                        </h5>
                     </div>
 
-                    <div class="row mb-3">
+                    <div class="card-body">
 
-                        <div class="col-md-6">
+                        <div class="row">
 
-                            <strong>Trạng thái:</strong>
+                            <div class="col-md-6 mb-3">
+                                <strong>Mã đơn hàng</strong>
+                                <div>#<?= (int)$order['id'] ?></div>
+                            </div>
 
-                            <span class="badge bg-warning text-dark">
-                                <?= ucfirst($order['status']) ?>
-                            </span>
+                            <div class="col-md-6 mb-3">
+                                <strong>Ngày đặt</strong>
+                                <div>
+                                    <?= !empty($order['created_at'])
+                                        ? date('d/m/Y H:i', strtotime($order['created_at']))
+                                        : '-' ?>
+                                </div>
+                            </div>
 
-                        </div>
+                            <div class="col-md-6 mb-3">
+                                <strong>Trạng thái</strong>
+                                <div>
+                                    <span class="badge bg-<?= $statusInfo['class'] ?>">
+                                        <i class="fa-solid fa-<?= $statusInfo['icon'] ?>"></i>
+                                        <?= $statusInfo['text'] ?>
+                                    </span>
+                                </div>
+                            </div>
 
-                        <div class="col-md-6">
-
-                            <strong>Thanh toán:</strong>
-
-                            <?= $order['payment_method'] === 'banking'
-                                ? 'Chuyển khoản'
-                                : 'COD' ?>
-
-                        </div>
-
-                    </div>
-
-                    <?php if (!empty($order['note'])): ?>
-
-                        <div class="mb-3">
-
-                            <strong>Ghi chú:</strong>
-
-                            <div class="text-muted">
-                                <?= nl2br(
-                                    htmlspecialchars($order['note'])
-                                ) ?>
+                            <div class="col-md-6 mb-3">
+                                <strong>Thanh toán</strong>
+                                <div>
+                                    <?= $order['payment_method'] === 'banking'
+                                        ? 'Chuyển khoản ngân hàng'
+                                        : 'Thanh toán khi nhận hàng (COD)' ?>
+                                </div>
                             </div>
 
                         </div>
 
-                    <?php endif; ?>
+                        <?php if (!empty($order['note'])): ?>
+
+                            <hr>
+
+                            <strong>Ghi chú</strong>
+
+                            <p class="mt-2 mb-0">
+                                <?= nl2br(htmlspecialchars($order['note'])) ?>
+                            </p>
+
+                        <?php endif; ?>
+
+                    </div>
 
                 </div>
 
-            </div>
+                <div class="card order-card shadow-sm">
 
-            <!-- Danh sách sản phẩm -->
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fa-solid fa-cart-shopping me-2"></i>
+                            Sản phẩm đã đặt
+                        </h5>
+                    </div>
 
-            <div class="card shadow-sm mt-4">
+                    <div class="card-body p-0">
 
-                <div class="card-header">
-                    <strong>Sản phẩm đã đặt</strong>
-                </div>
+                        <div class="table-responsive">
 
-                <div class="card-body p-0">
+                            <table class="table align-middle mb-0">
 
-                    <table class="table mb-0">
+                                <thead>
 
-                        <thead>
+                                <tr>
+                                    <th>Sản phẩm</th>
+                                    <th class="text-center">SL</th>
+                                    <th class="text-end">Đơn giá</th>
+                                    <th class="text-end">Thành tiền</th>
+                                </tr>
 
-                        <tr>
-                            <th>Sản phẩm</th>
-                            <th class="text-center">
-                                Số lượng
-                            </th>
-                            <th class="text-end">
-                                Đơn giá
-                            </th>
-                            <th class="text-end">
-                                Thành tiền
-                            </th>
-                        </tr>
+                                </thead>
 
-                        </thead>
+                                <tbody>
 
-                        <tbody>
+                                <?php foreach ($items as $item): ?>
 
-                        <?php foreach ($items as $item): ?>
+                                    <tr class="product-row">
 
-                            <tr>
+                                        <td>
 
-                                <td>
-                                    <?= htmlspecialchars($item['name']) ?>
-                                </td>
+                                            <div class="d-flex align-items-center">
 
-                                <td class="text-center">
-                                    <?= $item['quantity'] ?>
-                                </td>
+                                                <img
+                                                    src="<?= BASE_URL ?>/public/uploads/products/<?= htmlspecialchars($item['image_path'] ?? 'default-product.jpg') ?>"
+                                                    alt="<?= htmlspecialchars($item['name']) ?>"
+                                                    class="product-image border rounded me-3"
+                                                >
 
-                                <td class="text-end">
-                                    <?= formatPrice($item['price']) ?>
-                                </td>
+                                                <div>
 
-                                <td class="text-end">
+                                                    <div class="fw-semibold">
+                                                        <?= htmlspecialchars($item['name']) ?>
+                                                    </div>
 
-                                    <?= formatPrice(
-                                        $item['subtotal']
-                                    ) ?>
+                                                    <small class="text-muted">
+                                                        SKU:
+                                                        <?= htmlspecialchars($item['sku']) ?>
+                                                    </small>
 
-                                </td>
+                                                </div>
 
-                            </tr>
+                                            </div>
 
-                        <?php endforeach; ?>
+                                        </td>
 
-                        </tbody>
+                                        <td class="text-center">
+                                            <?= (int)$item['quantity'] ?>
+                                        </td>
 
-                    </table>
+                                        <td class="text-end">
+                                            <?= formatPrice((float)$item['price']) ?>
+                                        </td>
 
-                </div>
+                                        <td class="text-end fw-bold">
+                                            <?= formatPrice((float)$item['subtotal']) ?>
+                                        </td>
 
-            </div>
+                                    </tr>
 
-            <!-- Tổng tiền -->
+                                <?php endforeach; ?>
 
-            <div class="card shadow-sm mt-4">
+                                </tbody>
 
-                <div class="card-body">
+                            </table>
 
-                    <div class="d-flex justify-content-between">
-
-                        <strong>Tổng thanh toán</strong>
-
-                        <strong class="text-danger fs-4">
-
-                            <?= formatPrice(
-                                $order['total']
-                            ) ?>
-
-                        </strong>
+                        </div>
 
                     </div>
 
@@ -190,34 +327,127 @@ require_once __DIR__ . '/../../includes/navbar.php';
 
             </div>
 
-            <!-- Nút -->
+            <!-- RIGHT -->
 
-            <div class="text-center mt-4">
+            <div class="col-lg-4">
 
-                <a
-                    href="<?= BASE_URL ?>/my-orders"
-                    class="btn btn-primary">
+                <div class="card order-card shadow summary-card">
 
-                    Đơn hàng của tôi
+                    <div class="card-header bg-dark">
+                        <h5 class="mb-0">
+                            <i class="fa-solid fa-credit-card me-2"></i>
+                            Thanh toán
+                        </h5>
+                    </div>
 
-                </a>
+                    <div class="card-body">
 
-                <a
-                    href="<?= BASE_URL ?>/shop"
-                    class="btn btn-outline-secondary">
+                        <?php if ($discount > 0): ?>
 
-                    Tiếp tục mua sắm
+                            <div class="d-flex justify-content-between mb-3">
 
-                </a>
+                                <span>Giảm giá</span>
+
+                                <span class="text-success fw-bold">
+                                    -<?= formatPrice($discount) ?>
+                                </span>
+
+                            </div>
+
+                        <?php endif; ?>
+
+                        <div class="total-box">
+
+                            <div class="d-flex justify-content-between align-items-center">
+
+                                <span class="fw-bold">
+                                    Tổng thanh toán
+                                </span>
+
+                                <span class="fw-bold fs-4">
+                                    <?= formatPrice($total) ?>
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <?php if (($order['payment_method'] ?? '') === 'banking'): ?>
+
+                    <div class="card order-card shadow-sm mt-4">
+
+                        <div class="card-header bg-success">
+                            <h5 class="mb-0">
+                                <i class="fa-solid fa-building-columns me-2"></i>
+                                Thông tin chuyển khoản
+                            </h5>
+                        </div>
+
+                        <div class="card-body">
+
+                            <p>
+                                <strong>Ngân hàng:</strong><br>
+                                <?= defined('BANK_NAME') ? BANK_NAME : 'Chưa cấu hình' ?>
+                            </p>
+
+                            <p>
+                                <strong>Số tài khoản:</strong><br>
+                                <?= defined('BANK_ACCOUNT') ? BANK_ACCOUNT : 'Chưa cấu hình' ?>
+                            </p>
+
+                            <p>
+                                <strong>Chủ tài khoản:</strong><br>
+                                <?= defined('BANK_OWNER') ? BANK_OWNER : 'Chưa cấu hình' ?>
+                            </p>
+
+                            <div class="alert alert-warning mb-0">
+
+                                <strong>Nội dung chuyển khoản:</strong><br>
+
+                                TG<?= (int)$order['id'] ?>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                <?php endif; ?>
 
             </div>
 
         </div>
 
+        <div class="text-center mt-5">
+
+            <a href="<?= BASE_URL ?>/my-orders"
+            class="btn btn-primary btn-lg px-4">
+
+                <i class="fa-solid fa-box me-2"></i>
+
+                Đơn hàng của tôi
+
+            </a>
+
+            <a href="<?= BASE_URL ?>/shop"
+            class="btn btn-outline-dark btn-lg px-4 ms-2">
+
+                <i class="fa-solid fa-store me-2"></i>
+
+                Tiếp tục mua sắm
+
+            </a>
+
+        </div>
+
     </div>
 
-</div>
 
-<?php
-require_once __DIR__ . '/../../includes/footer.php';
-?>
+</main>
+
+<?php require_once __DIR__ . '/../../includes/footer.php'; ?>
+

@@ -1,7 +1,4 @@
 <?php
-// File: models/BaseModel.php
-
-// Kích hoạt chế độ kiểm tra kiểu dữ liệu nghiêm ngặt của PHP 8
 declare(strict_types=1);
 
 class BaseModel {
@@ -155,5 +152,13 @@ class BaseModel {
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute($params);
         return $stmt->fetchAll();
+    }
+
+    /**
+     * Expose $pdo để Controller dùng transaction
+     */
+    public function getPdo(): PDO
+    {
+        return $this->pdo;
     }
 }

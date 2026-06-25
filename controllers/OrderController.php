@@ -1,6 +1,17 @@
 <?php
 // File: controllers/OrderController.php
 declare(strict_types=1);
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+require_once __DIR__ . '/../config/app.php';
+require_once __DIR__ . '/../config/database.php';
+
+// Nhúng các Model cần thiết mà Controller đang gọi
+require_once __DIR__ . '/../models/Order.php';
+require_once __DIR__ . '/../models/OrderDetail.php';
+require_once __DIR__ . '/../models/Cart.php';
+require_once __DIR__ . '/../models/CartItem.php';
 
 class OrderController
 {
@@ -373,4 +384,31 @@ class OrderController
         exit;
     }
 
+}
+// --- THÊM ĐOẠN NÀY VÀO DƯỚI CÙNG CỦA FILE OrderController.php ---
+
+// 1. Khởi tạo đối tượng Controller
+$orderController = new OrderController();
+
+// 2. Lấy đường dẫn hiện tại
+$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+
+// 3. Phân luồng chạy hàm tương ứng
+if (preg_match('#/admin/orders/(\d+)/status#', $uri, $matches)) {
+    // URL cập nhật trạng thái (vd: /admin/orders/12/status)
+    $id = (int) $matches[1];
+    
+    // Đã đổi thành adminUpdateStatus
+    $orderController->adminUpdateStatus($id); 
+
+} elseif (preg_match('#/admin/orders/(\d+)$#', $uri, $matches)) {
+    // URL xem chi tiết (vd: /admin/orders/12)
+    $id = (int) $matches[1];
+    
+    // Đã đổi thành adminDetail
+    $orderController->adminDetail($id);
+
+} else {
+    // Mặc định: Xem danh sách đơn hàng
+    $orderController->adminIndex(); 
 }

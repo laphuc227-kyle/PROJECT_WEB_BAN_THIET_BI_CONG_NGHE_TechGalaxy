@@ -28,8 +28,8 @@ $statusBadge = [
     'cancelled' => 'bg-danger',
 ];
 
-require __DIR__ . '/../../../includes/header.php';
-require __DIR__ . '/../../../includes/sidebar.php';
+require __DIR__ . '/../../../includes/admin_header.php';
+require __DIR__ . '/../../../includes/admin_sidebar.php';
 ?>
 
 <?php

@@ -123,3 +123,20 @@ function slugify($string) {
     $string = strtolower($string);
     return trim($string, '-');
 }
+if (!function_exists('formatHeroTitle')) {
+    /**
+     * Định dạng tiêu đề Hero Banner, tự động bọc thẻ span cho từ khóa highlight
+     */
+    function formatHeroTitle(string $title, string $highlight): string 
+    {
+        $escapedTitle = htmlspecialchars($title);
+        $escapedHighlight = htmlspecialchars($highlight);
+        
+        if (!empty($escapedHighlight)) {
+            $replacement = '<span class="text-highlight-tg">' . $escapedHighlight . '</span>';
+            return nl2br(str_replace($escapedHighlight, $replacement, $escapedTitle));
+        }
+        
+        return nl2br($escapedTitle);
+    }
+}

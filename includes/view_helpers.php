@@ -65,4 +65,8 @@ if (!function_exists('formatHeroTitle')) {
         $html          = str_replace($safeHighlight, '<span class="highlight">' . $safeHighlight . '</span>', $safeTitle);
         return nl2br($html);
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> develop

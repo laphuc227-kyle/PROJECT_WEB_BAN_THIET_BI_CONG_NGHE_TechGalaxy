@@ -1,5 +1,6 @@
 .idea/
 config/database.php
+<<<<<<< HEAD
 
 # Upload ảnh user thật (giữ default.png làm mẫu)
 public/uploads/*
@@ -12,3 +13,6 @@ public/uploads/avatars/*
 Thumbs.db
 desktop.ini
 *.log
+=======
+config/mail.php
+>>>>>>> develop

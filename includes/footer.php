@@ -157,4 +157,8 @@
 <?= $extraJS ?? '' ?>
 
 </body>
+<<<<<<< HEAD
 </html>
+=======
+</html>
+>>>>>>> develop

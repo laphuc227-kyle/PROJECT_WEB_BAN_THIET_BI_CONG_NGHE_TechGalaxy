@@ -423,4 +423,8 @@ $brands = [
 </script>
 <?php
 $extraJS = '<script>document.addEventListener("DOMContentLoaded",function(){window.initHeroSwiper?.();window.initFeaturedSwiper?.();window.initBrandsSwiper?.();});</script>';
+<<<<<<< HEAD
 require_once __DIR__ . '/../../includes/footer.php';
+=======
+require_once __DIR__ . '/../../includes/footer.php';
+>>>>>>> develop

@@ -49,13 +49,16 @@ function sanitize($input) {
  * 5. Kiểm tra trạng thái đăng nhập
  */
 function isLoggedIn() {
-    return isset($_SESSION['user_id']);
+    return !empty($_SESSION['user']) || isset($_SESSION['user_id']);
 }
 
 /**
  * 6. Kiểm tra quyền Admin
  */
 function isAdmin() {
+    if (!empty($_SESSION['user']['role'])) {
+        return $_SESSION['user']['role'] === 'admin';
+    }
     return isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin';
 }
 

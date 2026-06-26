@@ -1,10 +1,10 @@
 <?php
 /**
  * Front controller — TechGalaxy
-<<<<<<< HEAD
- * Trỏ DocumentRoot hoặc truy cập: http://localhost/techgalaxy/
+ * Trỏ DocumentRoot hoặc truy cập: http://localhost:8012/techgalaxy/
  */
 require_once __DIR__ . '/config/app.php';
+require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/includes/helpers.php';
 
 $basePath = parse_url(BASE_URL, PHP_URL_PATH) ?: '';
@@ -15,10 +15,6 @@ $routes = [
     ''       => __DIR__ . '/views/user/index.php',
     'index'  => __DIR__ . '/views/user/index.php',
 ];
-
-=======
- * Trỏ DocumentRoot hoặc truy cập: http://localhost:8012/techgalaxy/
- */
 
 // Bắt buộc khởi động Session ở đây để lưu phiên đăng nhập Admin
 if (session_status() === PHP_SESSION_NONE) {

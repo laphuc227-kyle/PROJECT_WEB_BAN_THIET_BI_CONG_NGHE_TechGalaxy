@@ -204,8 +204,4 @@ $user          = $_SESSION['user'] ?? null;
       <i class="fa-solid fa-xmark"></i>
     </button>
   </div>
-<<<<<<< HEAD
 </div>
-=======
-</div>
->>>>>>> develop

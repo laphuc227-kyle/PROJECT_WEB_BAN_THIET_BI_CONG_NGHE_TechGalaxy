@@ -3,18 +3,6 @@
  * Front controller — TechGalaxy
  * Trỏ DocumentRoot hoặc truy cập: http://localhost:8012/techgalaxy/
  */
-require_once __DIR__ . '/config/app.php';
-require_once __DIR__ . '/config/database.php';
-require_once __DIR__ . '/includes/helpers.php';
-
-$basePath = parse_url(BASE_URL, PHP_URL_PATH) ?: '';
-$uri      = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
-$path     = '/' . trim((string) preg_replace('#^' . preg_quote($basePath, '#') . '#', '', $uri), '/');
-
-$routes = [
-    ''       => __DIR__ . '/views/user/index.php',
-    'index'  => __DIR__ . '/views/user/index.php',
-];
 
 // Bắt buộc khởi động Session ở đây để lưu phiên đăng nhập Admin
 if (session_status() === PHP_SESSION_NONE) {
@@ -25,11 +13,10 @@ require_once __DIR__ . '/config/app.php';
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/includes/helpers.php';
 
-
 $basePath = parse_url(BASE_URL, PHP_URL_PATH) ?: '';
 $uri      = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 
-// Đã sửa logic: Xóa bỏ dấu '/' thừa thãi để khớp với mảng Routes bên dưới
+// Xóa bỏ dấu '/' thừa thãi để khớp với mảng Routes bên dưới
 $path = trim((string) preg_replace('#^' . preg_quote($basePath, '#') . '#', '', $uri), '/');
 
 // Danh sách các đường dẫn CHUẨN xác nhất
@@ -46,7 +33,7 @@ $routes = [
     'blog'                  => __DIR__ . '/views/user/blog.php',
     'blog/detail'           => __DIR__ . '/views/user/blog_detail.php',
 
-    // --- Khu vực Quản trị Admin Panel (TASK-06) ---
+    // --- Khu vực Quản trị Admin Panel ---
     'admin'                 => __DIR__ . '/controllers/DashboardController.php',
     'admin/coupons'         => __DIR__ . '/controllers/CouponController.php',
     'admin/coupons/create'  => __DIR__ . '/views/admin/coupons/create.php',
@@ -62,16 +49,12 @@ $routes = [
 ];
 
 // Nếu tìm thấy đường dẫn trong mảng, gọi file giao diện tương ứng
->>>>>>> develop
 if (isset($routes[$path])) {
     require $routes[$path];
     exit;
 }
 
-<<<<<<< HEAD
-=======
 // Nếu không tìm thấy, hiển thị trang lỗi 404
->>>>>>> develop
 http_response_code(404);
 $pageTitle = 'Không tìm thấy trang';
 require_once __DIR__ . '/includes/header.php';
@@ -82,8 +65,4 @@ require_once __DIR__ . '/includes/navbar.php';
   <p class="text-muted">Trang bạn tìm không tồn tại.</p>
   <a href="<?= BASE_URL ?>/" class="btn-primary-tg">Về trang chủ</a>
 </main>
-<<<<<<< HEAD
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
-=======
-<?php require_once __DIR__ . '/includes/footer.php'; ?>
->>>>>>> develop

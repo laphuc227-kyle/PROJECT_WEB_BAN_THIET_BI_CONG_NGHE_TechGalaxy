@@ -46,8 +46,4 @@ generateToken();
     <?= htmlspecialchars($_SESSION['flash']['message']) ?>
   </div>
   <?php unset($_SESSION['flash']); ?>
-<<<<<<< HEAD
 <?php endif; ?>
-=======
-<?php endif; ?>
->>>>>>> develop

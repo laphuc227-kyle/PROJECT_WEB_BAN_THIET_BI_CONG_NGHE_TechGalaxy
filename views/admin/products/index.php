@@ -14,9 +14,9 @@ $flashType    = $_SESSION['flash_type']    ?? 'success';
 unset($_SESSION['flash_message'], $_SESSION['flash_type']);
 
 // Helper format giá
-// function formatPrice(float $price): string {
-//     return number_format($price, 0, ',', '.') . 'đ';
-// }
+function formatPrice(float $price): string {
+    return number_format($price, 0, ',', '.') . 'đ';
+}
 ?>
 <!DOCTYPE html>
 <html lang="vi">

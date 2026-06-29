@@ -1,11 +1,6 @@
 <?php
 
 namespace Controllers;
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../models/Product.php';
-require_once __DIR__ . '/../models/Category.php';
-require_once __DIR__ . '/../models/ProductImage.php';
-require_once __DIR__ . '/../models/Wishlist.php';
 
 use Models\Category;
 use Models\Product;
@@ -470,24 +465,5 @@ class ProductController
         header('Content-Type: application/json; charset=UTF-8');
         echo json_encode($data, JSON_UNESCAPED_UNICODE);
         exit;
-    }
-}
-
-$productController = new ProductController();
-$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-
-if (strpos($uri, '/admin/products/create') !== false) {
-    $productController->adminCreate();
-} elseif (preg_match('#/admin/products/(\d+)/edit#', $uri, $matches)) {
-    $productController->adminEdit((int)$matches[1]);
-} elseif (preg_match('#/admin/products/(\d+)/delete#', $uri, $matches)) {
-    $productController->adminDelete((int)$matches[1]);
-} elseif (strpos($uri, '/admin/products') !== false) {
-    $productController->adminIndex();
-} else {
-    if (preg_match('#/product/(\d+)#', $uri, $matches)) {
-        $productController->productDetail((int)$matches[1]);
-    } else {
-        $productController->shop();
     }
 }

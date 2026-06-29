@@ -2,7 +2,7 @@
 
 namespace Models;
 
-//use Config\Database;
+use Config\Database;
 use PDO;
 
 /**
@@ -15,8 +15,7 @@ class Wishlist
 
     public function __construct()
     {
-        global $pdo;
-        $this->db = $pdo;
+        $this->db = Database::getConnection();
     }
 
     /**

@@ -2,7 +2,7 @@
 
 namespace Models;
 
-//use Config\Database;
+use Config\Database;
 use PDO;
 
 /**
@@ -18,9 +18,8 @@ class Product
     public const PER_PAGE = 12;
 
     public function __construct()
-   {
-        global $pdo;
-        $this->db = $pdo;
+    {
+        $this->db = Database::getConnection();
     }
 
     /**

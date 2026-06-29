@@ -12,20 +12,25 @@ require_once __DIR__ . '/../../../includes/admin_sidebar.php';
     <h1 class="h4 fw-bold mb-0" style="color: var(--text-main);">
       <i class="fa-solid fa-user me-2 text-primary"></i>Chi tiết khách hàng
     </h1>
-    <a href="<?= BASE_URL ?>/admin/customers" class="btn btn-outline-secondary">
+    <a href="/techgalaxy/admin/customers" class="btn btn-outline-secondary">
       <i class="fa-solid fa-arrow-left me-1"></i> Quay lại
     </a>
   </div>
 
-  <?= getFlash() ?>
+  <?php if (isset($_SESSION['flash_message'])): ?>
+      <div class="alert alert-<?= $_SESSION['flash_type'] ?? 'info' ?> alert-dismissible fade show">
+          <?= $_SESSION['flash_message'] ?>
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+      <?php unset($_SESSION['flash_message'], $_SESSION['flash_type']); ?>
+  <?php endif; ?>
 
   <div class="row g-4">
-    <!-- Thông tin cá nhân -->
     <div class="col-lg-4">
       <div class="rounded-3 p-4 text-center"
            style="background: #fff; border: 1px solid var(--border); box-shadow: var(--shadow);">
         <?php if (!empty($customer['avatar'])): ?>
-          <img src="<?= BASE_URL . '/public/uploads/' . htmlspecialchars($customer['avatar']) ?>"
+          <img src="/public/uploads/<?= htmlspecialchars($customer['avatar']) ?>"
                alt="<?= htmlspecialchars($customer['name']) ?>"
                class="rounded-circle mb-3"
                style="width: 90px; height: 90px; object-fit: cover; border: 3px solid var(--border);">
@@ -64,9 +69,11 @@ require_once __DIR__ . '/../../../includes/admin_sidebar.php';
 
         <div class="mt-4">
           <form method="POST"
-                action="<?= BASE_URL ?>/admin/customers/<?= $customer['id'] ?>/toggle"
+                action="/techgalaxy/admin/customers/<?= $customer['id'] ?>/toggle"
                 onsubmit="return confirm('<?= $customer['status'] ? 'Chặn' : 'Mở chặn' ?> người dùng này?')">
-            <input type="hidden" name="csrf_token" value="<?= generateToken() ?>">
+            
+            <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+            
             <button type="submit"
                     class="btn btn-sm w-100 <?= $customer['status'] ? 'btn-outline-danger' : 'btn-outline-success' ?>">
               <i class="fa-solid <?= $customer['status'] ? 'fa-ban' : 'fa-circle-check' ?> me-1"></i>
@@ -77,7 +84,6 @@ require_once __DIR__ . '/../../../includes/admin_sidebar.php';
       </div>
     </div>
 
-    <!-- Lịch sử mua hàng -->
     <div class="col-lg-8">
       <div class="rounded-3 overflow-hidden"
            style="background: #fff; border: 1px solid var(--border); box-shadow: var(--shadow);">
@@ -118,7 +124,7 @@ require_once __DIR__ . '/../../../includes/admin_sidebar.php';
                 ?>
                 <tr>
                   <td class="ps-4">
-                    <a href="<?= BASE_URL ?>/admin/orders/<?= $order['id'] ?>"
+                    <a href="/admin/orders/<?= $order['id'] ?>"
                        class="fw-semibold text-primary text-decoration-none">
                       #<?= $order['id'] ?>
                     </a>

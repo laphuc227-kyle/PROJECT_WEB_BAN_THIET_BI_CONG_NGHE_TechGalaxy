@@ -19,8 +19,8 @@ $statusMap = [
     'cancelled' => ['label' => 'Đã huỷ',        'badge' => 'bg-danger'],
 ];
 
-require __DIR__ . '/../../../includes/header.php';
-require __DIR__ . '/../../../includes/sidebar.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/techgalaxy/includes/header.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/techgalaxy/includes/sidebar.php';
 ?>
 
 <div class="admin-content">
@@ -36,9 +36,10 @@ require __DIR__ . '/../../../includes/sidebar.php';
         Chi tiết đơn hàng #<?= str_pad((string)$order['id'], 6, '0', STR_PAD_LEFT) ?>
       </span>
     </div>
-    <a href="<?= BASE_URL ?>/admin/orders" class="btn btn-sm btn-outline-secondary">
-      <i class="fa-solid fa-arrow-left me-1"></i>Quay lại
-    </a>
+    <a href="/techgalaxy/admin/orders" class="btn btn-outline-secondary">
+  <i class="fa-solid fa-arrow-left me-1"></i>Quay lại
+</a>
+
   </div>
 
   <div class="admin-main p-4">
@@ -220,7 +221,7 @@ require __DIR__ . '/../../../includes/sidebar.php';
         </div>
         <div class="card-body p-3">
           <form method="POST"
-                action="<?= BASE_URL ?>/admin/orders/<?= (int)$order['id'] ?>/status">
+                action="<?= '/techgalaxy' ?>/admin/orders/<?= (int)$order['id'] ?>/status">
             <input type="hidden" name="csrf_token"
                    value="<?= $_SESSION['csrf_token'] ?? '' ?>">
 

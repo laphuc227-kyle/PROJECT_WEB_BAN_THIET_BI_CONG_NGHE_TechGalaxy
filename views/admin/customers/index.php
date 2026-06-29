@@ -17,7 +17,13 @@ require_once __DIR__ . '/../../../includes/admin_sidebar.php';
     </h1>
   </div>
 
-  <?= getFlash() ?>
+  <?php if (isset($_SESSION['flash_message'])): ?>
+    <div class="alert alert-<?= $_SESSION['flash_type'] ?? 'info' ?> alert-dismissible fade show mb-4">
+        <?= htmlspecialchars($_SESSION['flash_message']) ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <?php unset($_SESSION['flash_message'], $_SESSION['flash_type']); ?>
+<?php endif; ?>
 
   <!-- Filters + Search -->
   <form method="GET" action="<?= BASE_URL ?>/admin/customers" class="mb-4">
@@ -111,13 +117,13 @@ require_once __DIR__ . '/../../../includes/admin_sidebar.php';
                 </span>
               </td>
               <td class="pe-4 text-end">
-                <a href="<?= BASE_URL ?>/admin/customers/<?= $cust['id'] ?>"
+                <a href="/techgalaxy/admin/customers/<?= $cust['id'] ?>"
                    class="btn btn-sm btn-outline-primary me-1"
                    title="Xem chi tiết">
                   <i class="fa-solid fa-eye"></i>
                 </a>
                 <form method="POST"
-                      action="<?= BASE_URL ?>/admin/customers/<?= $cust['id'] ?>/toggle"
+                      action="/techgalaxy/admin/customers/<?= $cust['id'] ?>/toggle"
                       class="d-inline"
                       onsubmit="return confirm('<?= $cust['status'] ? 'Chặn' : 'Mở chặn' ?> người dùng này?')">
                   <input type="hidden" name="csrf_token" value="<?= generateToken() ?>">

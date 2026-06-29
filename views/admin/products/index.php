@@ -3,9 +3,9 @@
  * views/admin/products/index.php
  *
  * Biến được truyền từ ProductController::adminIndex():
- *  - $products     array   Danh sách sản phẩm trang hiện tại
- *  - $totalPages   int     Tổng số trang
- *  - $currentPage  int     Trang hiện tại
+ * - $products     array   Danh sách sản phẩm trang hiện tại
+ * - $totalPages   int     Tổng số trang
+ * - $currentPage  int     Trang hiện tại
  */
 
 // Đọc + xóa flash message
@@ -13,67 +13,50 @@ $flashMessage = $_SESSION['flash_message'] ?? null;
 $flashType    = $_SESSION['flash_type']    ?? 'success';
 unset($_SESSION['flash_message'], $_SESSION['flash_type']);
 
-// Helper format giá
-// function formatPrice(float $price): string {
-//     return number_format($price, 0, ',', '.') . 'đ';
-// }
+// GỌI LAYOUT CHUẨN CỦA DỰ ÁN (Thay thế cho các file cũ)
+require_once __DIR__ . '/../../../includes/admin_header.php';
+require_once __DIR__ . '/../../../includes/admin_sidebar.php';
 ?>
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản lý Sản phẩm — TechGalaxy Admin</title>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
-    <?php include __DIR__ . '/../_admin_styles.php'; ?>
-    <style>
-        .product-thumb {
-            width: 52px; height: 52px;
-            object-fit: cover;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
-            background: #f8fafc;
-        }
-        .product-thumb-placeholder {
-            width: 52px; height: 52px;
-            border-radius: 8px;
-            background: #f1f5f9;
-            display: flex; align-items: center; justify-content: center;
-            color: #94a3b8; font-size: 1.2rem;
-            border: 1px solid #e2e8f0;
-        }
-        .status-badge { font-size: .72rem; padding: 3px 10px; border-radius: 20px; font-weight: 600; }
-        .status-active  { background: #dcfce7; color: #16a34a; }
-        .status-inactive{ background: #fee2e2; color: #dc2626; }
-        .status-draft   { background: #fef9c3; color: #ca8a04; }
-        .price-col      { font-family: 'Space Grotesk', sans-serif; font-weight: 600; color: #2563eb; }
-        .price-original { font-size: .78rem; color: #94a3b8; text-decoration: line-through; }
-    </style>
-</head>
-<body>
-<?php include __DIR__ . '/../_sidebar.php'; ?>
+
+<style>
+    .product-thumb {
+        width: 52px; height: 52px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        background: #f8fafc;
+    }
+    .product-thumb-placeholder {
+        width: 52px; height: 52px;
+        border-radius: 8px;
+        background: #f1f5f9;
+        display: flex; align-items: center; justify-content: center;
+        color: #94a3b8; font-size: 1.2rem;
+        border: 1px solid #e2e8f0;
+    }
+    .status-badge { font-size: .72rem; padding: 3px 10px; border-radius: 20px; font-weight: 600; }
+    .status-active  { background: #dcfce7; color: #16a34a; }
+    .status-inactive{ background: #fee2e2; color: #dc2626; }
+    .status-draft   { background: #fef9c3; color: #ca8a04; }
+    .price-col      { font-family: 'Space Grotesk', sans-serif; font-weight: 600; color: #2563eb; }
+    .price-original { font-size: .78rem; color: #94a3b8; text-decoration: line-through; }
+</style>
 
 <div class="admin-content">
-    <?php include __DIR__ . '/../_topbar.php'; ?>
-
     <div class="admin-main p-4">
 
-        <!-- Page header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h4 class="admin-page-title mb-1">
+                <h4 class="admin-page-title mb-1" style="color: var(--text-main);">
                     <i class="bi bi-box-seam me-2 text-primary"></i>Quản lý sản phẩm
                 </h4>
                 <p class="text-muted small mb-0">Danh sách tất cả sản phẩm trong hệ thống</p>
             </div>
-            <a href="/admin/products/create" class="btn btn-primary">
+            <a href="/techgalaxy/admin/products/create" class="btn btn-primary">
                 <i class="bi bi-plus-lg me-1"></i>Thêm sản phẩm
             </a>
         </div>
 
-        <!-- Flash message -->
         <?php if ($flashMessage): ?>
             <div class="alert alert-<?= $flashType ?> alert-dismissible d-flex align-items-center gap-2 mb-4" role="alert">
                 <?php
@@ -85,26 +68,24 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type']);
             </div>
         <?php endif; ?>
 
-        <!-- Table card -->
-        <div class="admin-card">
-            <div class="admin-card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-                <span><i class="bi bi-list-ul me-2"></i>Danh sách sản phẩm</span>
-                <!-- Tìm nhanh -->
+        <div class="admin-card rounded-3 overflow-hidden" style="background: #fff; border: 1px solid var(--border); box-shadow: var(--shadow);">
+            <div class="admin-card-header d-flex justify-content-between align-items-center flex-wrap gap-2 p-3 border-bottom" style="background: var(--bg-light);">
+                <span class="fw-bold"><i class="bi bi-list-ul me-2"></i>Danh sách sản phẩm</span>
                 <input type="text" id="tableSearch" class="form-control form-control-sm"
                        placeholder="Tìm nhanh theo tên..." style="max-width:240px;">
             </div>
 
             <div class="table-responsive">
-                <table class="admin-table" id="productTable">
-                    <thead>
+                <table class="table align-middle mb-0" id="productTable">
+                    <thead style="background: var(--bg-light);">
                         <tr>
-                            <th style="width:60px">Ảnh</th>
-                            <th>Tên sản phẩm</th>
-                            <th>Danh mục</th>
-                            <th class="text-end">Giá</th>
-                            <th class="text-center">Tồn kho</th>
-                            <th class="text-center">Trạng thái</th>
-                            <th class="text-center" style="width:130px">Thao tác</th>
+                            <th class="py-3 ps-4" style="width:60px">Ảnh</th>
+                            <th class="py-3">Tên sản phẩm</th>
+                            <th class="py-3">Danh mục</th>
+                            <th class="py-3 text-end">Giá</th>
+                            <th class="py-3 text-center">Tồn kho</th>
+                            <th class="py-3 text-center">Trạng thái</th>
+                            <th class="py-3 pe-4 text-center" style="width:130px">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -112,7 +93,7 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type']);
                             <tr>
                                 <td colspan="7" class="text-center py-5 text-muted">
                                     <i class="bi bi-inbox display-6 d-block mb-2 opacity-40"></i>
-                                    Chưa có sản phẩm nào. <a href="/admin/products/create">Thêm ngay</a>
+                                    Chưa có sản phẩm nào. <a href="/techgalaxy/admin/products/create">Thêm ngay</a>
                                 </td>
                             </tr>
                         <?php else: ?>
@@ -122,11 +103,10 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type']);
                                 $displayPrice = $hasSale ? $p['sale_price'] : $p['price'];
                                 $statusMap  = ['active' => ['active','Đang bán'], 'inactive' => ['inactive','Ẩn'], 'draft' => ['draft','Nháp']];
                                 [$statusClass, $statusLabel] = $statusMap[$p['status']] ?? ['draft','Nháp'];
-                                $imgSrc = !empty($p['primary_image']) ? '/' . $p['primary_image'] : null;
+                                $imgSrc = !empty($p['primary_image']) ? '/techgalaxy/' . ltrim($p['primary_image'], '/') : null;
                                 ?>
                                 <tr>
-                                    <!-- Ảnh thumbnail -->
-                                    <td>
+                                    <td class="ps-4">
                                         <?php if ($imgSrc): ?>
                                             <img src="<?= htmlspecialchars($imgSrc) ?>"
                                                  class="product-thumb"
@@ -139,9 +119,8 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type']);
                                         <?php endif; ?>
                                     </td>
 
-                                    <!-- Tên -->
                                     <td>
-                                        <div class="fw-semibold" style="max-width:260px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                        <div class="fw-semibold" style="max-width:260px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color: var(--text-main);">
                                             <?= htmlspecialchars($p['name']) ?>
                                         </div>
                                         <div class="text-muted" style="font-size:.75rem;">
@@ -149,22 +128,19 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type']);
                                         </div>
                                     </td>
 
-                                    <!-- Danh mục -->
                                     <td>
                                         <span class="badge bg-light text-primary border border-primary" style="font-size:.75rem;">
                                             <?= htmlspecialchars($p['category_name'] ?? '—') ?>
                                         </span>
                                     </td>
 
-                                    <!-- Giá -->
                                     <td class="text-end">
-                                        <div class="price-col"><?= formatPrice((float)$displayPrice) ?></div>
+                                        <div class="price-col"><?= number_format((float)$displayPrice, 0, ',', '.') . 'đ' ?></div>
                                         <?php if ($hasSale): ?>
-                                            <div class="price-original"><?= formatPrice((float)$p['price']) ?></div>
+                                            <div class="price-original"><?= number_format((float)$p['price'], 0, ',', '.') . 'đ' ?></div>
                                         <?php endif; ?>
                                     </td>
 
-                                    <!-- Tồn kho -->
                                     <td class="text-center">
                                         <?php if ((int)$p['stock'] === 0): ?>
                                             <span class="badge bg-danger">Hết hàng</span>
@@ -175,16 +151,14 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type']);
                                         <?php endif; ?>
                                     </td>
 
-                                    <!-- Trạng thái -->
                                     <td class="text-center">
                                         <span class="status-badge status-<?= $statusClass ?>">
                                             <?= $statusLabel ?>
                                         </span>
                                     </td>
 
-                                    <!-- Thao tác -->
-                                    <td class="text-center">
-                                        <a href="/admin/products/edit/<?= $p['id'] ?>"
+                                    <td class="pe-4 text-center">
+                                        <a href="/techgalaxy/admin/products/edit/<?= $p['id'] ?>"
                                            class="btn btn-sm btn-outline-primary me-1" title="Sửa">
                                             <i class="bi bi-pencil"></i>
                                         </a>
@@ -201,23 +175,22 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type']);
                 </table>
             </div>
 
-            <!-- Pagination -->
             <?php if ($totalPages > 1): ?>
-                <div class="d-flex justify-content-center p-3 border-top">
+                <div class="d-flex justify-content-center p-3" style="border-top: 1px solid var(--border); background: var(--bg-light);">
                     <nav>
                         <ul class="pagination pagination-sm mb-0 gap-1">
                             <li class="page-item <?= $currentPage <= 1 ? 'disabled' : '' ?>">
-                                <a class="page-link" href="?page=<?= $currentPage - 1 ?>">
+                                <a class="page-link rounded-2" href="?page=<?= $currentPage - 1 ?>">
                                     <i class="bi bi-chevron-left"></i>
                                 </a>
                             </li>
                             <?php for ($i = max(1,$currentPage-2); $i <= min($totalPages,$currentPage+2); $i++): ?>
                                 <li class="page-item <?= $i === $currentPage ? 'active' : '' ?>">
-                                    <a class="page-link" href="?page=<?= $i ?>"><?= $i ?></a>
+                                    <a class="page-link rounded-2" href="?page=<?= $i ?>"><?= $i ?></a>
                                 </li>
                             <?php endfor; ?>
                             <li class="page-item <?= $currentPage >= $totalPages ? 'disabled' : '' ?>">
-                                <a class="page-link" href="?page=<?= $currentPage + 1 ?>">
+                                <a class="page-link rounded-2" href="?page=<?= $currentPage + 1 ?>">
                                     <i class="bi bi-chevron-right"></i>
                                 </a>
                             </li>
@@ -225,50 +198,10 @@ unset($_SESSION['flash_message'], $_SESSION['flash_type']);
                     </nav>
                 </div>
             <?php endif; ?>
-        </div><!-- /admin-card -->
-
-    </div>
+        </div></div>
 </div>
 
-<!-- Delete modal -->
 <div class="modal fade" id="deleteModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header border-0">
-                <h5 class="modal-title text-danger">
-                    <i class="bi bi-exclamation-triangle me-2"></i>Xác nhận xóa
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body pt-0">
-                <p id="deleteMsg" class="mb-0"></p>
-                <p class="text-muted small mt-2 mb-0">Sản phẩm sẽ bị ẩn khỏi cửa hàng (soft delete). Bạn có thể khôi phục sau.</p>
-            </div>
-            <div class="modal-footer border-0">
-                <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
-                <a id="deleteConfirmBtn" href="#" class="btn btn-danger">
-                    <i class="bi bi-trash3 me-1"></i>Xóa sản phẩm
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-// Tìm nhanh trong bảng (client-side)
-document.getElementById('tableSearch').addEventListener('input', function () {
-    const q = this.value.toLowerCase();
-    document.querySelectorAll('#productTable tbody tr').forEach(row => {
-        row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
-    });
-});
-
-function confirmDelete(id, name) {
-    document.getElementById('deleteMsg').textContent = `Bạn có chắc muốn xóa sản phẩm "${name}"?`;
-    document.getElementById('deleteConfirmBtn').href = `/admin/products/delete/${id}`;
-    new bootstrap.Modal(document.getElementById('deleteModal')).show();
-}
-</script>
-</body>
-</html>
+            <div class="modal-header border

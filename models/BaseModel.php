@@ -15,6 +15,14 @@ class BaseModel {
     }
 
     /**
+     * Trả về đối tượng PDO để các controller/callable khác có thể sử dụng giao dịch
+     */
+    public function getPdo(): PDO
+    {
+        return $this->pdo;
+    }
+
+    /**
      * Lấy nhiều bản ghi có điều kiện
      */
     public function findAll(array $conditions = [], string $order = '', ?int $limit = null): array {

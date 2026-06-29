@@ -350,65 +350,72 @@ class OrderController
     // POST /admin/orders/{id}/status
     public function adminUpdateStatus(int $orderId): void
     {
-        $status = trim($_POST['status'] ?? '');
+        try {
+            $status = trim($_POST['status'] ?? '');
 
-        $allowedStatuses = [
-        'pending',
-        'confirmed',
-        'shipping',
-        'delivered',
-        'completed',
-        'cancelled'
-        ];
+            $allowedStatuses = [
+                'pending',
+                'confirmed',
+                'shipping',
+                'delivered',
+                'completed',
+                'cancelled'
+            ];
 
-        if (!in_array($status, $allowedStatuses, true)) {
+            if (!in_array($status, $allowedStatuses, true)) {
+                $_SESSION['flash_message'] = 'Trạng thái không hợp lệ.';
+                $_SESSION['flash_type'] = 'danger';
+                return;
+            }
 
-            $_SESSION['error'] = 'Trạng thái không hợp lệ.';
+            $success = $this->orderModel->updateStatus($orderId, $status);
 
-            header("Location: /admin/orders/{$orderId}");
-            exit;
+            if ($success) {
+                $_SESSION['flash_message'] = 'Cập nhật trạng thái thành công.';
+                $_SESSION['flash_type'] = 'success';
+            } else {
+                $_SESSION['flash_message'] = 'Trạng thái không đổi hoặc đã được cập nhật trước đó.';
+                $_SESSION['flash_type'] = 'warning';
+            }
+
+        } catch (\Throwable $e) {
+            // Ghi log để debug và show message cho admin
+            error_log('[adminUpdateStatus] ' . $e->getMessage());
+            $_SESSION['flash_message'] = 'Không thể cập nhật trạng thái. Vui lòng thử lại.';
+            $_SESSION['flash_type'] = 'danger';
         }
 
-        $success = $this->orderModel->updateStatus(
-            $orderId,
-            $status
-        );
-
-        if ($success) {
-            $_SESSION['success'] = 'Cập nhật trạng thái thành công.';
-        } else {
-            $_SESSION['error'] = 'Không thể cập nhật trạng thái.';
-        }
-
-        header("Location: /admin/orders/{$orderId}");
+        // Luôn redirect về trang chi tiết (AJAX sẽ theo redirect/ok)
+        header("Location: /techgalaxy/admin/orders/{$orderId}");
         exit;
     }
 
-}
-// --- THÊM ĐOẠN NÀY VÀO DƯỚI CÙNG CỦA FILE OrderController.php ---
+} // <--- ĐÂY LÀ DẤU ĐÓNG NGOẶC CỦA CLASS (Đã xóa các dấu dư thừa)
+
+// =========================================================================
+// ROUTER BẢO MẬT & CHUẨN XÁC CHO ORDER CONTROLLER
+// =========================================================================
 
 // 1. Khởi tạo đối tượng Controller
 $orderController = new OrderController();
 
-// 2. Lấy đường dẫn hiện tại
+// 2. Lấy đường dẫn hiện tại, loại bỏ phần BASE_PATH nếu ứng dụng chạy trong subfolder
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$basePath = parse_url(defined('BASE_URL') ? BASE_URL : '', PHP_URL_PATH) ?: '';
+$path = $uri;
+if ($basePath !== '' && strpos($uri, $basePath) === 0) {
+    $path = substr($uri, strlen($basePath));
+    if ($path === '') $path = '/';
+}
 
-// 3. Phân luồng chạy hàm tương ứng
-if (preg_match('#/admin/orders/(\d+)/status#', $uri, $matches)) {
-    // URL cập nhật trạng thái (vd: /admin/orders/12/status)
-    $id = (int) $matches[1];
-    
-    // Đã đổi thành adminUpdateStatus
-    $orderController->adminUpdateStatus($id); 
-
-} elseif (preg_match('#/admin/orders/(\d+)$#', $uri, $matches)) {
-    // URL xem chi tiết (vd: /admin/orders/12)
-    $id = (int) $matches[1];
-    
-    // Đã đổi thành adminDetail
-    $orderController->adminDetail($id);
-
-} else {
-    // Mặc định: Xem danh sách đơn hàng
+// 3. Phân luồng chạy hàm tương ứng (Bắt buộc dùng strpos/preg_match)
+if (preg_match('#/admin/orders/(\d+)/status/?$#', $path, $matches)) {
+    // URL cập nhật trạng thái
+    $orderController->adminUpdateStatus((int) $matches[1]);
+} elseif (preg_match('#/admin/orders/(\d+)/?$#', $path, $matches)) {
+    // URL xem chi tiết 
+    $orderController->adminDetail((int) $matches[1]);
+} elseif (strpos($path, '/admin/orders') !== false) {
+    // URL Xem danh sách đơn hàng
     $orderController->adminIndex(); 
 }

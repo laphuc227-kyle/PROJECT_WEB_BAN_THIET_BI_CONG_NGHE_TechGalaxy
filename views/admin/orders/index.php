@@ -4,7 +4,7 @@
 //   $orders  array   — danh sách đơn hàng (kèm user_name, user_email từ JOIN)
 //   $status  string  — filter hiện tại ('' = tất cả)
 
-$pageTitle = 'Quản lý đơn hàng — ' . APP_NAME;
+$pageTitle = 'Quản lý đơn hàng — ' . (defined('APP_NAME') ? APP_NAME : 'TechGalaxy');
 $adminPage = 'orders';
 $extraJS   = '';
 
@@ -27,6 +27,16 @@ $statusBadge = [
     'completed' => 'bg-success',
     'cancelled' => 'bg-danger',
 ];
+
+// Helper: format price for display (avoid undefined function error)
+if (!function_exists('formatPrice')) {
+  function formatPrice($amount)
+  {
+    // If amount is null/empty, show 0
+    $amount = $amount ?? 0;
+    return number_format((float)$amount, 0, ',', '.') . ' ₫';
+  }
+}
 
 require __DIR__ . '/../../../includes/admin_header.php';
 require __DIR__ . '/../../../includes/admin_sidebar.php';
@@ -66,7 +76,7 @@ $stats = $stats ?? [
       <span class="text-muted small">
         <i class="fa-regular fa-clock me-1"></i><?= date('d/m/Y H:i') ?>
       </span>
-      <a href="<?= BASE_URL ?>/" target="_blank"
+      <a href="<?= '/techgalaxy' ?>/" target="_blank"
          class="btn btn-sm btn-outline-secondary">
         <i class="fa-solid fa-arrow-up-right-from-square"></i>
       </a>
@@ -93,7 +103,7 @@ $stats = $stats ?? [
     <!-- ── Filter tabs theo trạng thái ────────────────── -->
     <div class="d-flex flex-wrap gap-2 mb-4">
       <?php foreach ($statusMap as $key => $info): ?>
-        <a href="<?= BASE_URL ?>/admin/orders<?= $key ? '?status=' . $key : '' ?>"
+        <a href="<?= '/techgalaxy' ?>/admin/orders<?= $key ? '?status=' . $key : '' ?>"
            class="btn btn-sm <?= $status === $key
              ? str_replace('btn-', 'btn-', $info['btn'])
              : 'btn-outline-secondary' ?>">
@@ -145,7 +155,7 @@ $stats = $stats ?? [
             <tr>
               <!-- Mã đơn -->
               <td>
-                <a href="<?= BASE_URL ?>/admin/orders/<?= (int)$order['id'] ?>"
+                <a href="<?= '/techgalaxy' ?>/admin/orders/<?= (int)$order['id'] ?>"
                    class="fw-bold text-primary text-decoration-none">
                   #<?= (int)$order['id'] ?>
                 </a>
@@ -199,12 +209,20 @@ $stats = $stats ?? [
 
               <!-- Thao tác -->
               <td class="text-center">
-                <!-- Xem chi tiết -->
-                <a href="<?= BASE_URL ?>/admin/orders/<?= (int)$order['id'] ?>"
-                   class="btn btn-sm btn-outline-primary me-1"
-                   title="Xem chi tiết">
-                  <i class="fa-solid fa-eye"></i>
-                </a>
+    <a href="/techgalaxy/admin/orders/<?= $order['id'] ?>" class="btn btn-sm btn-outline-primary" title="Xem">
+        <i class="fa-solid fa-eye"></i>
+    </a>
+
+    <?php if (!in_array($order['status'], ['completed', 'cancelled'])): ?>
+        <select class="form-select form-select-sm d-inline-block w-auto ms-1" 
+                onchange="updateOrderStatus(<?= $order['id'] ?>, this.value)">
+            <option value="" selected disabled>Đổi trạng thái...</option> <option value="pending">Chờ xác nhận</option>
+            <option value="confirmed">Đã xác nhận</option>
+            <option value="shipping">Đang giao</option>
+            <option value="delivered">Đã giao</option>
+        </select>
+    <?php endif; ?>
+</td>
 
                 <!-- Đổi trạng thái (dropdown) -->
                 <?php if (!in_array($order['status'], ['completed', 'cancelled'])): ?>
@@ -270,8 +288,7 @@ ob_start();
 ?>
 <script>
 const CSRF     = '<?= $csrf ?>';
-const BASE_URL = '<?= BASE_URL ?>';
-
+const BASE_URL = '/techgalaxy';
 // ── Tìm nhanh client-side ─────────────────────────────
 document.getElementById('orderSearch')?.addEventListener('input', function () {
   const q = this.value.toLowerCase();
@@ -330,6 +347,29 @@ document.querySelectorAll('.status-btn').forEach(btn => {
     }
   });
 });
+function updateOrderStatus(orderId, newStatus) {
+    if (!confirm('Bạn có chắc muốn đổi trạng thái đơn #' + orderId + ' không?')) {
+        location.reload(); // Huỷ thì load lại để chọn đúng status cũ
+        return;
+    }
+
+    fetch('/techgalaxy/admin/orders/' + orderId + '/status', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: 'status=' + newStatus + '&csrf_token=<?= $_SESSION['csrf_token'] ?? '' ?>'
+    })
+    .then(response => {
+        if (response.ok) {
+            alert('Cập nhật thành công!');
+            location.reload(); // Load lại để cập nhật màu Badge
+        } else {
+            alert('Lỗi: Không thể cập nhật trạng thái.');
+        }
+    });
+}
 </script>
 <?php
 $extraJS = ob_get_clean();

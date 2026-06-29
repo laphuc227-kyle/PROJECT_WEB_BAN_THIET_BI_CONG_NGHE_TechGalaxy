@@ -442,6 +442,76 @@ class ProductController
     /**
      * Kiểm tra quyền Admin
      */
+    /**
+     * ADMIN: Gọi giao diện form Thêm sản phẩm
+     */
+    
+
+    /**
+     * ADMIN: Nhận dữ liệu POST và lưu vào Database
+     */
+    public function adminStore(): void
+    {
+        $this->requireAdmin();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            global $pdo; // Dùng biến toàn cục giống như các Controller khác
+            
+            // 1. Nhận và làm sạch dữ liệu từ Form
+            $name        = trim($_POST['name'] ?? '');
+            $price       = (float)($_POST['price'] ?? 0);
+            $salePrice   = !empty($_POST['sale_price']) ? (float)$_POST['sale_price'] : null;
+            $stock       = (int)($_POST['stock'] ?? 0);
+            $categoryId  = (int)($_POST['category_id'] ?? 1);
+            $status      = $_POST['status'] ?? 'draft';
+            $description = trim($_POST['description'] ?? '');
+            
+            // 2. Xử lý Upload Ảnh (Nếu có)
+            $primaryImage = null;
+            if (isset($_FILES['primary_image']) && $_FILES['primary_image']['error'] === 0) {
+                // Đảm bảo thư mục lưu ảnh tồn tại
+                $targetDir = __DIR__ . '/../public/uploads/';
+                if (!is_dir($targetDir)) {
+                    mkdir($targetDir, 0777, true);
+                }
+                
+                $fileName = time() . '_' . basename($_FILES['primary_image']['name']);
+                $targetFile = $targetDir . $fileName;
+                
+                // Di chuyển ảnh vừa upload vào thư mục
+                if (move_uploaded_file($_FILES['primary_image']['tmp_name'], $targetFile)) {
+                    $primaryImage = 'public/uploads/' . $fileName;
+                }
+            }
+
+            // 3. Thêm dữ liệu vào Database bằng PDO
+            try {
+                $sql = "INSERT INTO products (name, price, sale_price, stock, category_id, status, description, primary_image) 
+                        VALUES (:name, :price, :sale_price, :stock, :category_id, :status, :description, :primary_image)";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute([
+                    ':name'          => $name,
+                    ':price'         => $price,
+                    ':sale_price'    => $salePrice,
+                    ':stock'         => $stock,
+                    ':category_id'   => $categoryId,
+                    ':status'        => $status,
+                    ':description'   => $description,
+                    ':primary_image' => $primaryImage
+                ]);
+
+                $_SESSION['flash_message'] = 'Đã thêm sản phẩm thành công!';
+                $_SESSION['flash_type']    = 'success';
+            } catch (\Exception $e) {
+                $_SESSION['flash_message'] = 'Lỗi lưu dữ liệu: ' . $e->getMessage();
+                $_SESSION['flash_type']    = 'danger';
+            }
+        }
+
+        // Chuyển hướng về lại danh sách sản phẩm
+        header('Location: /techgalaxy/admin/products');
+        exit;
+    }
     private function requireAdmin(): void
     {
         if (empty($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'admin') {
@@ -490,4 +560,27 @@ if (strpos($uri, '/admin/products/create') !== false) {
     } else {
         $productController->shop();
     }
+}
+$productController = new ProductController();
+$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+
+// Bổ sung luồng lưu sản phẩm
+if (strpos($uri, '/admin/products/store') !== false) {
+    $productController->adminStore();
+} 
+// Luồng gọi form tạo sản phẩm
+elseif (strpos($uri, '/admin/products/create') !== false) {
+    $productController->adminCreate();
+} 
+// Sửa sản phẩm
+elseif (preg_match('#/admin/products/(\d+)/edit#', $uri, $matches)) {
+    $productController->adminEdit((int)$matches[1]);
+} 
+// Xóa sản phẩm
+elseif (preg_match('#/admin/products/(\d+)/delete#', $uri, $matches)) {
+    $productController->adminDelete((int)$matches[1]);
+}
+// Danh sách sản phẩm
+elseif (strpos($uri, '/admin/products') !== false) {
+    $productController->adminIndex();
 }

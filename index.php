@@ -47,11 +47,27 @@ $routes = [
     'admin/orders/(?P<id>\d+)'   => __DIR__ . '/controllers/OrderController.php',
     'admin/orders/(?P<id>\d+)/status' => __DIR__ . '/controllers/OrderController.php',
     'admin/products' => __DIR__ . '/controllers/ProductController.php',
+	'admin/customers' => __DIR__ . '/controllers/CustomerController.php',
 ];
 
 // Nếu tìm thấy đường dẫn trong mảng, gọi file giao diện tương ứng
 if (isset($routes[$path])) {
     require $routes[$path];
+    exit;
+}
+
+// 2. Xử lý các đường dẫn động (chứa ID phía sau) bằng strpos
+// (strpos kiểm tra xem đường dẫn có BẮT ĐẦU bằng cụm từ đó không)
+if (strpos($path, 'admin/orders') === 0) {
+    require __DIR__ . '/controllers/OrderController.php';
+    exit;
+}
+if (strpos($path, 'admin/products') === 0) {
+    require __DIR__ . '/controllers/ProductController.php';
+    exit;
+}
+if (strpos($path, 'admin/customers') === 0) {
+    require __DIR__ . '/controllers/CustomerController.php';
     exit;
 }
 

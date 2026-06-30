@@ -83,10 +83,10 @@ class Post extends BaseModel
      */
     public function makeExcerpt(string $content, int $length = 150): string
     {
-        $plain = strip_tags($content);
-        return mb_strlen($plain) > $length
-            ? mb_substr($plain, 0, $length) . '...'
-            : $plain;
+    $plain = html_entity_decode(strip_tags($content), ENT_QUOTES, 'UTF-8');
+    return mb_strlen($plain) > $length
+        ? mb_substr($plain, 0, $length) . '...'
+        : $plain;
     }
 
     /**

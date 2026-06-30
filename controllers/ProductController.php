@@ -1,11 +1,6 @@
 <?php
 
 namespace Controllers;
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../models/Product.php';
-require_once __DIR__ . '/../models/Category.php';
-require_once __DIR__ . '/../models/ProductImage.php';
-require_once __DIR__ . '/../models/Wishlist.php';
 
 use Models\Category;
 use Models\Product;
@@ -306,8 +301,7 @@ class ProductController
                     $_SESSION['flash_type']    = 'success';
                 }
 
-                header('Location: /admin/products');
-                exit;
+            header('Location: ' . BASE_URL . '/admin/products');                exit;
             }
         }
 
@@ -327,8 +321,8 @@ class ProductController
         $errors     = [];
 
         if (!$product) {
-            header('Location: /admin/products');
-            exit;
+            header('Location: ' . BASE_URL . '/admin/products');       
+                 exit;
         }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -351,7 +345,7 @@ class ProductController
 
                 $_SESSION['flash_message'] = 'Cập nhật sản phẩm thành công!';
                 $_SESSION['flash_type']    = 'success';
-                header('Location: /admin/products');
+                header('Location: ' . BASE_URL . '/admin/products');
                 exit;
             }
 
@@ -372,8 +366,8 @@ class ProductController
 
         $_SESSION['flash_message'] = 'Đã xóa sản phẩm.';
         $_SESSION['flash_type']    = 'info';
-        header('Location: /admin/products');
-        exit;
+        header('Location: ' . BASE_URL . '/admin/products');       
+ exit;
     }
 
     // =========================================================================
@@ -509,7 +503,7 @@ class ProductController
         }
 
         // Chuyển hướng về lại danh sách sản phẩm
-        header('Location: /techgalaxy/admin/products');
+            header('Location: ' . BASE_URL . '/admin/products');
         exit;
     }
     private function requireAdmin(): void
@@ -560,27 +554,4 @@ if (strpos($uri, '/admin/products/create') !== false) {
     } else {
         $productController->shop();
     }
-}
-$productController = new ProductController();
-$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-
-// Bổ sung luồng lưu sản phẩm
-if (strpos($uri, '/admin/products/store') !== false) {
-    $productController->adminStore();
-} 
-// Luồng gọi form tạo sản phẩm
-elseif (strpos($uri, '/admin/products/create') !== false) {
-    $productController->adminCreate();
-} 
-// Sửa sản phẩm
-elseif (preg_match('#/admin/products/(\d+)/edit#', $uri, $matches)) {
-    $productController->adminEdit((int)$matches[1]);
-} 
-// Xóa sản phẩm
-elseif (preg_match('#/admin/products/(\d+)/delete#', $uri, $matches)) {
-    $productController->adminDelete((int)$matches[1]);
-}
-// Danh sách sản phẩm
-elseif (strpos($uri, '/admin/products') !== false) {
-    $productController->adminIndex();
 }

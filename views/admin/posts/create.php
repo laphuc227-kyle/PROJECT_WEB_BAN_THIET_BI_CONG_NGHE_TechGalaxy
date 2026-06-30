@@ -71,17 +71,6 @@ require_once __DIR__ . '/../../../includes/admin_sidebar.php';
              style="background: #fff; border: 1px solid var(--border); box-shadow: var(--shadow);">
           <h2 class="h6 fw-bold mb-3" style="color: var(--text-main);">Xuất bản</h2>
 
-          <div class="mb-3">
-            <label for="status" class="form-label fw-semibold small">Trạng thái</label>
-            <select id="status" name="status" class="form-select">
-              <option value="draft" <?= ($_POST['status'] ?? '') === 'draft' ? 'selected' : '' ?>>
-                📝 Lưu nháp
-              </option>
-              <option value="published" <?= ($_POST['status'] ?? '') === 'published' ? 'selected' : '' ?>>
-                🚀 Đăng ngay
-              </option>
-            </select>
-          </div>
 
           <div class="d-grid gap-2 mt-4">
             <button type="submit" name="status" value="published" class="btn btn-primary">

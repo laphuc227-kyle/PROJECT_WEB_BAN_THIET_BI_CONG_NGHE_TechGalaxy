@@ -36,7 +36,7 @@ require_once __DIR__ . '/../../../includes/admin_sidebar.php';
         <?php endif; ?>
 
         <div class="admin-card rounded-3 p-4" style="background: #fff; border: 1px solid var(--border); box-shadow: var(--shadow);">
-            <form action="/techgalaxy/admin/products/store" method="POST" enctype="multipart/form-data">
+            <form action="/techgalaxy/admin/products/create" method="POST" enctype="multipart/form-data">
                 
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Tên sản phẩm <span class="text-danger">*</span></label>

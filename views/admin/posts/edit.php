@@ -23,7 +23,6 @@ require_once __DIR__ . '/../../../includes/admin_sidebar.php';
     <input type="hidden" name="csrf_token" value="<?= generateToken() ?>">
 
     <div class="row g-4">
-      <!-- LEFT -->
       <div class="col-lg-8">
 
         <div class="rounded-3 p-4 mb-4"
@@ -49,13 +48,11 @@ require_once __DIR__ . '/../../../includes/admin_sidebar.php';
             Nội dung <span class="text-danger">*</span>
           </label>
           <textarea id="postContent" name="content" rows="20"
-                    class="form-control"
-                    required><?= htmlspecialchars($post['content']) ?></textarea>
+                    class="form-control"><?= htmlspecialchars($post['content']) ?></textarea>
         </div>
 
       </div>
 
-      <!-- RIGHT -->
       <div class="col-lg-4">
 
         <div class="rounded-3 p-4 mb-4"
@@ -79,7 +76,6 @@ require_once __DIR__ . '/../../../includes/admin_sidebar.php';
           </div>
         </div>
 
-        <!-- Ảnh bìa hiện tại + upload mới -->
         <div class="rounded-3 p-4"
              style="background: #fff; border: 1px solid var(--border); box-shadow: var(--shadow);">
           <h2 class="h6 fw-bold mb-3">Ảnh bìa</h2>
@@ -105,7 +101,7 @@ require_once __DIR__ . '/../../../includes/admin_sidebar.php';
   </form>
 </div>
 
-<script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.3/tinymce.min.js" referrerpolicy="origin"></script>
 <script>
 tinymce.init({
   selector: '#postContent',

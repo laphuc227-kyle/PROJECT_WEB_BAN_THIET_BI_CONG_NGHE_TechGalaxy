@@ -21,6 +21,7 @@ class ComposerStaticInit33cad13092641f81b77ea1ff6e1ca5db
     );
 
     public static $classMap = array (
+        'Address' => __DIR__ . '/../..' . '/models/Address.php',
         'AuthController' => __DIR__ . '/../..' . '/controllers/AuthController.php',
         'BaseModel' => __DIR__ . '/../..' . '/models/BaseModel.php',
         'Cart' => __DIR__ . '/../..' . '/models/Cart.php',
@@ -28,15 +29,25 @@ class ComposerStaticInit33cad13092641f81b77ea1ff6e1ca5db
         'CartItem' => __DIR__ . '/../..' . '/models/CartItem.php',
         'Comment' => __DIR__ . '/../..' . '/models/Comment.php',
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
+        'Config\\Database' => __DIR__ . '/../..' . '/config/database.php',
+        'ContactController' => __DIR__ . '/../..' . '/controllers/ContactController.php',
+        'Controllers\\CustomerController' => __DIR__ . '/../..' . '/controllers/CustomerController.php',
+        'Controllers\\ProductController' => __DIR__ . '/../..' . '/controllers/ProductController.php',
+        'Controllers\\WishlistController' => __DIR__ . '/../..' . '/controllers/WishlistController.php',
         'Coupon' => __DIR__ . '/../..' . '/models/Coupon.php',
-        'CouponController' => __DIR__ . '/../..' . '/controllers/CouponController.php',
+        'Dashboard' => __DIR__ . '/../..' . '/models/Dashboard.php',
+        'Models\\Category' => __DIR__ . '/../..' . '/models/Category.php',
+        'Models\\Product' => __DIR__ . '/../..' . '/models/Product.php',
+        'Models\\ProductImage' => __DIR__ . '/../..' . '/models/ProductImage.php',
+        'Models\\Wishlist' => __DIR__ . '/../..' . '/models/Wishlist.php',
         'Order' => __DIR__ . '/../..' . '/models/Order.php',
         'OrderController' => __DIR__ . '/../..' . '/controllers/OrderController.php',
         'OrderDetail' => __DIR__ . '/../..' . '/models/OrderDetail.php',
         'Post' => __DIR__ . '/../..' . '/models/Post.php',
-        'PostController' => __DIR__ . '/../..' . '/controllers/PostController.php',
+        'Report' => __DIR__ . '/../..' . '/models/Report.php',
         'ReportController' => __DIR__ . '/../..' . '/controllers/ReportController.php',
         'Setting' => __DIR__ . '/../..' . '/models/Setting.php',
+        'User' => __DIR__ . '/../..' . '/models/User.php',
     );
 
     public static function getInitializer(ClassLoader $loader)

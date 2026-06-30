@@ -2,7 +2,7 @@
 
 namespace Models;
 
-//use Config\Database;
+use Config\Database;
 use PDO;
 
 /**
@@ -15,9 +15,8 @@ class Category
 
     public function __construct()
     {
-        global $pdo;
-        $this->db = $pdo;
-    
+        // Lấy kết nối PDO từ class Config\Database (Singleton)
+        $this->db = Database::getConnection();
     }
 
     /**

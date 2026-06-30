@@ -6,6 +6,7 @@ $vendorDir = dirname(__DIR__);
 $baseDir = dirname($vendorDir);
 
 return array(
+    'Address' => $baseDir . '/models/Address.php',
     'AuthController' => $baseDir . '/controllers/AuthController.php',
     'BaseModel' => $baseDir . '/models/BaseModel.php',
     'Cart' => $baseDir . '/models/Cart.php',
@@ -13,13 +14,23 @@ return array(
     'CartItem' => $baseDir . '/models/CartItem.php',
     'Comment' => $baseDir . '/models/Comment.php',
     'Composer\\InstalledVersions' => $vendorDir . '/composer/InstalledVersions.php',
+    'Config\\Database' => $baseDir . '/config/database.php',
+    'ContactController' => $baseDir . '/controllers/ContactController.php',
+    'Controllers\\CustomerController' => $baseDir . '/controllers/CustomerController.php',
+    'Controllers\\ProductController' => $baseDir . '/controllers/ProductController.php',
+    'Controllers\\WishlistController' => $baseDir . '/controllers/WishlistController.php',
     'Coupon' => $baseDir . '/models/Coupon.php',
-    'CouponController' => $baseDir . '/controllers/CouponController.php',
+    'Dashboard' => $baseDir . '/models/Dashboard.php',
+    'Models\\Category' => $baseDir . '/models/Category.php',
+    'Models\\Product' => $baseDir . '/models/Product.php',
+    'Models\\ProductImage' => $baseDir . '/models/ProductImage.php',
+    'Models\\Wishlist' => $baseDir . '/models/Wishlist.php',
     'Order' => $baseDir . '/models/Order.php',
     'OrderController' => $baseDir . '/controllers/OrderController.php',
     'OrderDetail' => $baseDir . '/models/OrderDetail.php',
     'Post' => $baseDir . '/models/Post.php',
-    'PostController' => $baseDir . '/controllers/PostController.php',
+    'Report' => $baseDir . '/models/Report.php',
     'ReportController' => $baseDir . '/controllers/ReportController.php',
     'Setting' => $baseDir . '/models/Setting.php',
+    'User' => $baseDir . '/models/User.php',
 );

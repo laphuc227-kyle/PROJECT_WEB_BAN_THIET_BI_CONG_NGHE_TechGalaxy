@@ -3,8 +3,25 @@
  * views/user/blog.php — Danh sách bài viết Blog
  * Route: GET /blog
  */
+require_once __DIR__ . '/../../models/Post.php';
+
+$postModel   = new Post();
+$page        = max(1, (int) ($_GET['page'] ?? 1));
+$result      = $postModel->getPublished($page, 6);
+
+$posts       = $postModel->getPublished($page, 6);
+$totalItems  = $postModel->count(['status' => 'published']);
+$totalPages  = (int) ceil($totalItems / 6);
+$currentPage = $page;
+
+// Tạo excerpt cho từng bài (vì DB chỉ có content đầy đủ, chưa có excerpt)
+foreach ($posts as &$p) {
+    $p['excerpt'] = $postModel->makeExcerpt($p['content'] ?? '', 120);
+}
+unset($p);
 $extraCSS = '<link href="' . BASE_URL . '/assets/css/blog.css" rel="stylesheet">';
 $pageTitle = $pageTitle ?? 'Blog — TechGalaxy';
+
 require_once __DIR__ . '/../../includes/header.php';
 require_once __DIR__ . '/../../includes/navbar.php';
 ?>
@@ -41,9 +58,8 @@ require_once __DIR__ . '/../../includes/navbar.php';
             <div class="row g-4">
               <?php foreach ($posts as $post): ?>
               <div class="col-md-6 col-lg-4">
-                <article class="blog-card h-100 rounded-3 overflow-hidden"
-                         style="border: 1px solid var(--border); box-shadow: var(--shadow); background: #fff; transition: transform .2s;">
-                  <!-- Ảnh thumbnail -->
+                <<article class="blog-card h-100 rounded-3 overflow-hidden"
+                    style="position: relative; border: 1px solid var(--border); box-shadow: var(--shadow); background: #fff; transition: transform .2s;">
                   <a href="<?= BASE_URL ?>/blog/<?= htmlspecialchars($post['slug']) ?>">
                     <img
                       src="<?= !empty($post['image']) ? BASE_URL . '/public/uploads/' . htmlspecialchars($post['image']) : BASE_URL . '/assets/img/blog-placeholder.jpg' ?>"

@@ -158,8 +158,8 @@ require_once __DIR__ . '/../../../includes/admin_sidebar.php';
                                     </td>
 
                                     <td class="pe-4 text-center">
-                                        <a href="/techgalaxy/admin/products/edit/<?= $p['id'] ?>"
-                                           class="btn btn-sm btn-outline-primary me-1" title="Sửa">
+                                        <a href="/techgalaxy/admin/products/<?= $p['id'] ?>/edit"
+                                            class="btn btn-sm btn-outline-primary me-1" title="Sửa">
                                             <i class="bi bi-pencil"></i>
                                         </a>
                                         <button class="btn btn-sm btn-outline-danger"
@@ -198,10 +198,41 @@ require_once __DIR__ . '/../../../includes/admin_sidebar.php';
                     </nav>
                 </div>
             <?php endif; ?>
-        </div></div>
+        </div>
+    </div>
 </div>
 
 <div class="modal fade" id="deleteModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header border
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Xác nhận xóa</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0">Bạn có chắc muốn xóa sản phẩm <strong id="deleteProductName"></strong>? Hành động này không thể hoàn tác.</p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                <a href="#" id="confirmDeleteBtn" class="btn btn-danger">Xóa</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDelete(id, name) {
+    document.getElementById('deleteProductName').textContent = name;
+    document.getElementById('confirmDeleteBtn').href = '/techgalaxy/admin/products/' + id + '/delete';
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+
+document.getElementById('tableSearch')?.addEventListener('input', function () {
+    const keyword = this.value.toLowerCase();
+    document.querySelectorAll('#productTable tbody tr').forEach(row => {
+        row.style.display = row.textContent.toLowerCase().includes(keyword) ? '' : 'none';
+    });
+});
+</script>
+
+<?php require_once __DIR__ . '/../../../includes/admin_footer.php'; ?>

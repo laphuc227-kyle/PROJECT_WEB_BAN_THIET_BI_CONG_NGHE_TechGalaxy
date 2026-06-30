@@ -2,7 +2,7 @@
 
 namespace Models;
 
-//use Config\Database;
+use Config\Database;
 use PDO;
 
 /**
@@ -18,9 +18,8 @@ class Product
     public const PER_PAGE = 12;
 
     public function __construct()
-   {
-        global $pdo;
-        $this->db = $pdo;
+    {
+        $this->db = Database::getConnection();
     }
 
     /**
@@ -198,14 +197,14 @@ class Product
 
         $slug = $this->generateSlug($data['name']);
 
-        $stmt->bindParam(':name',        $data['name'],                       PDO::PARAM_STR);
-        $stmt->bindParam(':slug',        $slug,                               PDO::PARAM_STR);
-        $stmt->bindParam(':description', $data['description'] ?? '',          PDO::PARAM_STR);
-        $stmt->bindParam(':price',       $data['price'],                      PDO::PARAM_STR);
-        $stmt->bindParam(':sale_price',  $data['sale_price'] ?? null);
-        $stmt->bindParam(':stock',       $data['stock'] ?? 0,                 PDO::PARAM_INT);
-        $stmt->bindParam(':category_id', $data['category_id'],                PDO::PARAM_INT);
-        $stmt->bindParam(':status',      $data['status'] ?? 'active',         PDO::PARAM_STR);
+        $stmt->bindValue(':name',        $data['name'],                       PDO::PARAM_STR);
+        $stmt->bindValue(':slug',        $slug,                               PDO::PARAM_STR);
+        $stmt->bindValue(':description', $data['description'] ?? '',          PDO::PARAM_STR);
+        $stmt->bindValue(':price',       $data['price'],                      PDO::PARAM_STR);
+        $stmt->bindValue(':sale_price',  $data['sale_price'] ?? null);
+        $stmt->bindValue(':stock',       $data['stock'] ?? 0,                 PDO::PARAM_INT);
+        $stmt->bindValue(':category_id', $data['category_id'],                PDO::PARAM_INT);
+        $stmt->bindValue(':status',      $data['status'] ?? 'active',         PDO::PARAM_STR);
 
         $stmt->execute();
         return (int) $this->db->lastInsertId();
@@ -215,29 +214,29 @@ class Product
      * Cập nhật sản phẩm theo ID
      */
     public function updateProduct(int $id, array $data): bool
-    {
-        $slug = $this->generateSlug($data['name']);
+{
+    $slug = $this->generateSlug($data['name']);
 
-        $stmt = $this->db->prepare("
-            UPDATE products
-            SET name = :name, slug = :slug, description = :description,
-                price = :price, sale_price = :sale_price, stock = :stock,
-                category_id = :category_id, status = :status, updated_at = NOW()
-            WHERE id = :id
-        ");
+    $stmt = $this->db->prepare("
+        UPDATE products
+        SET name = :name, slug = :slug, description = :description,
+            price = :price, sale_price = :sale_price, stock = :stock,
+            category_id = :category_id, status = :status
+        WHERE id = :id
+    ");
 
-        $stmt->bindParam(':name',        $data['name'],              PDO::PARAM_STR);
-        $stmt->bindParam(':slug',        $slug,                      PDO::PARAM_STR);
-        $stmt->bindParam(':description', $data['description'] ?? '', PDO::PARAM_STR);
-        $stmt->bindParam(':price',       $data['price'],             PDO::PARAM_STR);
-        $stmt->bindParam(':sale_price',  $data['sale_price'] ?? null);
-        $stmt->bindParam(':stock',       $data['stock'] ?? 0,        PDO::PARAM_INT);
-        $stmt->bindParam(':category_id', $data['category_id'],       PDO::PARAM_INT);
-        $stmt->bindParam(':status',      $data['status'] ?? 'active',PDO::PARAM_STR);
-        $stmt->bindParam(':id',          $id,                        PDO::PARAM_INT);
+    $stmt->bindValue(':name',        $data['name'],              PDO::PARAM_STR);
+    $stmt->bindValue(':slug',        $slug,                      PDO::PARAM_STR);
+    $stmt->bindValue(':description', $data['description'] ?? '', PDO::PARAM_STR);
+    $stmt->bindValue(':price',       $data['price'],             PDO::PARAM_STR);
+    $stmt->bindValue(':sale_price',  $data['sale_price'] ?? null);
+    $stmt->bindValue(':stock',       $data['stock'] ?? 0,        PDO::PARAM_INT);
+    $stmt->bindValue(':category_id', $data['category_id'],       PDO::PARAM_INT);
+    $stmt->bindValue(':status',      $data['status'] ?? 'active',PDO::PARAM_STR);
+    $stmt->bindValue(':id',          $id,                        PDO::PARAM_INT);
 
-        return $stmt->execute();
-    }
+    return $stmt->execute();
+}
 
     /**
      * Xóa mềm (soft delete) sản phẩm theo ID

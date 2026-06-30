@@ -1,3 +1,18 @@
 .idea/
 config/database.php
+<<<<<<< HEAD
+
+# Upload ảnh user thật (giữ default.png làm mẫu)
+public/uploads/*
+!public/uploads/avatars/
+public/uploads/avatars/*
+!public/uploads/avatars/default.png
+
+# Hệ điều hành / log
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
+=======
 config/mail.php
+>>>>>>> develop

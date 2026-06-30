@@ -28,7 +28,13 @@ require_once __DIR__ . '/../../../includes/admin_sidebar.php';
     </div>
   </div>
 
-  <?= getFlash() ?>
+  <?php $flash = getFlash(); ?>
+<?php if ($flash): ?>
+  <div class="alert alert-<?= $flash['type'] === 'error' ? 'danger' : htmlspecialchars($flash['type']) ?> alert-dismissible fade show mb-4">
+    <?= htmlspecialchars($flash['message']) ?>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+<?php endif; ?>
 
   <div class="row g-4">
 

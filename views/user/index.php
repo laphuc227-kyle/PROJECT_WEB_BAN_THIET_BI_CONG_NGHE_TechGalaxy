@@ -3,6 +3,7 @@ if (!defined('BASE_URL')) {
     require_once __DIR__ . '/../../config/app.php';
 }
 
+
 $pageTitle = 'Trang chủ';
 $pageDesc  = 'TechGalaxy - Thiết bị công nghệ & phụ kiện điện tử chính hãng, giá tốt nhất';
 $extraCSS  = '<link rel="stylesheet" href="' . BASE_URL . '/assets/css/home.css">';
@@ -74,35 +75,9 @@ $latestProducts = [
     ['id' => 18, 'name' => 'OnePlus 12', 'slug' => 'oneplus-12', 'price' => 18990000, 'sale_price' => 16990000, 'image' => $img . '/products/product-8.jpg', 'category_name' => 'Điện thoại', 'is_new' => true, 'in_wishlist' => false],
 ];
 
-$latestPosts = [
-    [
-        'title'      => 'iPhone 15 Pro Max vs Samsung S24 Ultra: Đâu là lựa chọn tốt nhất 2024?',
-        'slug'       => 'iphone-15-pro-max-vs-samsung-s24-ultra',
-        'excerpt'    => 'Chúng tôi so sánh hai flagship đỉnh cao của năm 2024 trên mọi phương diện: hiệu năng, camera, pin và giá trị sử dụng thực tế.',
-        'image'      => $img . '/blog/blog-1.jpg',
-        'tag'        => 'So sánh',
-        'created_at' => '15/01/2025',
-        'read_time'  => '8 phút đọc',
-    ],
-    [
-        'title'      => 'Top 5 tai nghe chống ồn tốt nhất dưới 5 triệu đồng',
-        'slug'       => 'top-5-tai-nghe-chong-on-tot-nhat',
-        'excerpt'    => 'Tổng hợp 5 mẫu tai nghe chống ồn active đáng mua nhất hiện nay với giá dưới 5 triệu, phù hợp với nhiều nhu cầu sử dụng.',
-        'image'      => $img . '/blog/blog-2.jpg',
-        'tag'        => 'Top list',
-        'created_at' => '10/01/2025',
-        'read_time'  => '5 phút đọc',
-    ],
-    [
-        'title'      => 'Laptop gaming tầm trung 2025: Hiệu năng tốt, không cần tốn nhiều tiền',
-        'slug'       => 'laptop-gaming-tam-trung-2025',
-        'excerpt'    => 'Bạn muốn chơi game mượt mà mà không cần chi quá 25 triệu? Đây là những lựa chọn laptop gaming tầm trung đáng mua nhất.',
-        'image'      => $img . '/blog/blog-3.jpg',
-        'tag'        => 'Tư vấn',
-        'created_at' => '05/01/2025',
-        'read_time'  => '6 phút đọc',
-    ],
-];
+require_once __DIR__ . '/../../models/Post.php';
+$postModel = new Post();
+$latestPosts = $postModel->getLatest(3);
 
 $brands = [
     ['name' => 'Apple',    'logo' => $img . '/brands/apple.svg'],
@@ -348,45 +323,32 @@ $brands = [
 <!-- ════════════════════════════════════════════════════════════════ -->
 <!-- SECTION 7: BÀI VIẾT MỚI NHẤT                                   -->
 <!-- ════════════════════════════════════════════════════════════════ -->
-<section class="blog-section" aria-label="Bài viết mới">
-  <div class="container-xl">
-    <div class="section-header d-flex align-items-end justify-content-between flex-wrap gap-3">
-      <div>
-        <h2 class="section-title">Blog <span>công nghệ</span></h2>
-        <p class="section-subtitle mt-1">Tin tức, đánh giá và tư vấn sản phẩm mới nhất</p>
+<div class="row g-4 mt-2">
+  <?php foreach ($latestPosts as $post): ?>
+  <div class="col-12 col-md-4">
+    <article class="blog-card">
+      <div class="blog-card__image-wrap">
+        <img src="<?= !empty($post['image']) ? BASE_URL . '/public/uploads/' . htmlspecialchars($post['image']) : BASE_URL . '/assets/img/blog-placeholder.jpg' ?>"
+             alt="<?= htmlspecialchars($post['title']) ?>"
+             class="blog-card__image" loading="lazy">
       </div>
-      <a href="<?= BASE_URL ?>/blog" class="btn-outline-tg btn-sm">
-        Xem tất cả <i class="fa-solid fa-arrow-right"></i>
-      </a>
-    </div>
-
-    <div class="row g-4 mt-2">
-      <?php foreach ($latestPosts as $post): ?>
-      <div class="col-12 col-md-4">
-        <article class="blog-card">
-          <div class="blog-card__image-wrap">
-            <img src="<?= htmlspecialchars($post['image']) ?>"
-                 alt="<?= htmlspecialchars($post['title']) ?>"
-                 class="blog-card__image" loading="lazy">
-          </div>
-          <div class="blog-card__body">
-            <span class="blog-card__tag"><?= htmlspecialchars($post['tag']) ?></span>
-            <h3 class="blog-card__title">
-              <a href="<?= BASE_URL ?>/blog/<?= htmlspecialchars($post['slug']) ?>">
-                <?= htmlspecialchars($post['title']) ?>
-              </a>
-            </h3>
-            <p class="blog-card__excerpt"><?= htmlspecialchars($post['excerpt']) ?></p>
-            <div class="blog-card__footer">
-              <span><i class="fa-regular fa-calendar me-1"></i><?= $post['created_at'] ?></span>
-              <a href="<?= BASE_URL ?>/blog/<?= htmlspecialchars($post['slug']) ?>"
-                 class="blog-card__read-more">
-                Đọc thêm <i class="fa-solid fa-arrow-right"></i>
-              </a>
-            </div>
-          </div>
-        </article>
+      <div class="blog-card__body">
+        <span class="blog-card__tag">Mới nhất</span>
+        <h3 class="blog-card__title">
+          <a href="<?= BASE_URL ?>/blog/<?= htmlspecialchars($post['slug']) ?>">
+            <?= htmlspecialchars($post['title']) ?>
+          </a>
+        </h3>
+        <p class="blog-card__excerpt"><?= htmlspecialchars($postModel->makeExcerpt($post['content'] ?? '', 100)) ?></p>
+        <div class="blog-card__footer">
+          <span><i class="fa-regular fa-calendar me-1"></i><?= date('d/m/Y', strtotime($post['created_at'])) ?></span>
+          <a href="<?= BASE_URL ?>/blog/<?= htmlspecialchars($post['slug']) ?>" class="blog-card__read-more">
+            Đọc thêm <i class="fa-solid fa-arrow-right"></i>
+          </a>
+        </div>
       </div>
+    </article>
+  </div>
       <?php endforeach; ?>
     </div>
   </div>

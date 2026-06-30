@@ -12,6 +12,7 @@ require_once __DIR__ . '/../models/Order.php';
 require_once __DIR__ . '/../models/OrderDetail.php';
 require_once __DIR__ . '/../models/Cart.php';
 require_once __DIR__ . '/../models/CartItem.php';
+require_once __DIR__ . '/../models/Address.php';
 
 class OrderController
 {
@@ -19,6 +20,7 @@ class OrderController
     private OrderDetail $orderDetailModel;
     private Cart $cartModel;
     private CartItem $cartItemModel;
+    private Address $addressModel;
 
     public function __construct()
     {
@@ -42,22 +44,34 @@ class OrderController
     public function showCheckout(): void
     {
         $userId = $this->getCurrentUserId();
-        $cart   = $this->cartModel->getOrCreateCart($userId, session_id());
-        $items  = $this->cartItemModel->getByCartId((int) $cart['id']);
 
-        if (empty($items)) {
+        $cart = $this->cartModel->getOrCreateCart(
+            $userId,
+            session_id()
+        );
+
+        $cartItems = $this->cartItemModel->getByCartId(
+            (int)$cart['id']
+        );
+
+        if (empty($cartItems)) {
             header('Location: /cart');
             exit;
         }
 
         $subtotal = 0;
-        foreach ($items as $item) {
-            $subtotal += $item['price'] * $item['quantity']; // sửa typo
+        foreach ($cartItems as $item) {
+            $subtotal += $item['price'] * $item['quantity'];
         }
 
         $shippingFee = $subtotal >= 500000 ? 0 : 30000;
-        $discount    = (int) ($_SESSION['coupon_discount'] ?? 0);
-        $total       = $subtotal + $shippingFee - $discount;
+        $discount    = (int)($_SESSION['coupon_discount'] ?? 0);
+        $grandTotal  = $subtotal + $shippingFee - $discount;
+
+        $addressModel = new Address();
+        $addresses = $addressModel->getByUser($userId);
+
+        $pageTitle = 'Thanh toán';
 
         require __DIR__ . '/../views/user/checkout.php';
     }
@@ -143,10 +157,11 @@ class OrderController
                 $stmt = $pdo->prepare(
                     "UPDATE products
                      SET stock = stock - :qty
-                     WHERE id = :id AND stock >= :qty"
+                     WHERE id = :id AND stock >= :qty_check"
                 );
                 $stmt->execute([
                     ':qty' => $item['quantity'],
+                    ':qty_check' => $item['quanlity'],
                     ':id'  => $item['product_id'],
                 ]);
 

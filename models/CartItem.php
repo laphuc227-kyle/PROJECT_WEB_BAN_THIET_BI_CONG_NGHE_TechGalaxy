@@ -21,6 +21,7 @@ class CartItem extends BaseModel
                 ci.product_id,
                 ci.quantity,
                 ci.price,
+                (ci.quantity * ci.price) AS subtotal,
 
                 p.name,
                 p.slug,

@@ -8,10 +8,18 @@ class BaseModel {
     protected PDO $pdo;
     protected string $table;
 
-    public function __construct() {
+    public function __construct(?PDO $pdo = null) {
         // Lấy biến $pdo từ file config/database.php đã được require ở index
         global $pdo;
-        $this->pdo = $pdo;
+        $this->pdo = $pdo ?? $GLOBALS['pdo'];
+    }
+
+    /**
+     * Trả về PDO instance
+     */
+    public function getPdo(): PDO
+    {
+        return $this->pdo;
     }
 
     /**

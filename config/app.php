@@ -12,3 +12,6 @@ define('MAX_FILE_SIZE', 5 * 1024 * 1024); // 5MB
 define('TIMEZONE', 'Asia/Ho_Chi_Minh');
 
 date_default_timezone_set(TIMEZONE);
+// --- CẤU HÌNH PHÂN TRANG ---
+// Trang blog phía User cần hiển thị 6 bài / 1 trang
+define('PAGINATION_LIMIT_BLOG', 6);

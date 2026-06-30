@@ -49,13 +49,16 @@ function sanitize($input) {
  * 5. Kiểm tra trạng thái đăng nhập
  */
 function isLoggedIn() {
-    return isset($_SESSION['user_id']);
+    return !empty($_SESSION['user']) || isset($_SESSION['user_id']);
 }
 
 /**
  * 6. Kiểm tra quyền Admin
  */
 function isAdmin() {
+    if (!empty($_SESSION['user']['role'])) {
+        return $_SESSION['user']['role'] === 'admin';
+    }
     return isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin';
 }
 
@@ -122,4 +125,21 @@ function slugify($string) {
     $string = preg_replace('/(-)+/', '-', $string);
     $string = strtolower($string);
     return trim($string, '-');
+}
+if (!function_exists('formatHeroTitle')) {
+    /**
+     * Định dạng tiêu đề Hero Banner, tự động bọc thẻ span cho từ khóa highlight
+     */
+    function formatHeroTitle(string $title, string $highlight): string 
+    {
+        $escapedTitle = htmlspecialchars($title);
+        $escapedHighlight = htmlspecialchars($highlight);
+        
+        if (!empty($escapedHighlight)) {
+            $replacement = '<span class="text-highlight-tg">' . $escapedHighlight . '</span>';
+            return nl2br(str_replace($escapedHighlight, $replacement, $escapedTitle));
+        }
+        
+        return nl2br($escapedTitle);
+    }
 }

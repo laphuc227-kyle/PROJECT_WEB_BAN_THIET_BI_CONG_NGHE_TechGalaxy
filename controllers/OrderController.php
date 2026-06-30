@@ -400,3 +400,30 @@ class OrderController
     }
 
 }
+// --- THÊM ĐOẠN NÀY VÀO DƯỚI CÙNG CỦA FILE OrderController.php ---
+
+// 1. Khởi tạo đối tượng Controller
+$orderController = new OrderController();
+
+// 2. Lấy đường dẫn hiện tại
+$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+
+// 3. Phân luồng chạy hàm tương ứng
+if (preg_match('#/admin/orders/(\d+)/status#', $uri, $matches)) {
+    // URL cập nhật trạng thái (vd: /admin/orders/12/status)
+    $id = (int) $matches[1];
+    
+    // Đã đổi thành adminUpdateStatus
+    $orderController->adminUpdateStatus($id); 
+
+} elseif (preg_match('#/admin/orders/(\d+)$#', $uri, $matches)) {
+    // URL xem chi tiết (vd: /admin/orders/12)
+    $id = (int) $matches[1];
+    
+    // Đã đổi thành adminDetail
+    $orderController->adminDetail($id);
+
+} else {
+    // Mặc định: Xem danh sách đơn hàng
+    $orderController->adminIndex(); 
+}

@@ -76,7 +76,7 @@ $latestProducts = [
 ];
 
 require_once __DIR__ . '/../../models/Post.php';
-$postModel = new Post();
+$postModel = new \Models\Post();
 $latestPosts = $postModel->getLatest(3);
 
 $brands = [

@@ -4,6 +4,10 @@
 // Kích hoạt chế độ kiểm tra kiểu dữ liệu nghiêm ngặt của PHP 8
 declare(strict_types=1);
 
+namespace Models;
+
+use PDO;
+
 class BaseModel {
     protected PDO $pdo;
     protected string $table;

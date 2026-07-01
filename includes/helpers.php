@@ -143,3 +143,14 @@ if (!function_exists('formatHeroTitle')) {
         return nl2br($escapedTitle);
     }
 }
+
+if (!function_exists('redirectIfAuthenticated')) {
+    function redirectIfAuthenticated(): void
+    {
+        // Kiểm tra session user_id (hoặc tên biến session mà Kim đang dùng để lưu đăng nhập)
+        if (!empty($_SESSION['user_id'])) {
+            header('Location: ' . BASE_URL . '/');
+            exit;
+        }
+    }
+}

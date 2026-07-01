@@ -1,94 +1,24 @@
 <?php
-// ===== LẤY DỮ LIỆU SẢN PHẨM CHI TIẾT =====
-global $pdo;
-
-// Lấy ID từ URL: /product/3
-$productId = (int) (explode('/', trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/product/'))[0] ?? 0);
-
-// Cách lấy ID chuẩn hơn — parse từ path
-$uriPath   = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-$basePath  = parse_url(BASE_URL, PHP_URL_PATH) ?: '';
-$cleanPath = trim(str_replace($basePath, '', $uriPath), '/');
-// cleanPath lúc này là "product/3"
-preg_match('@^product/(\d+)$@', $cleanPath, $idMatch);
-$productId = (int) ($idMatch[1] ?? 0);
-
-if ($productId <= 0) {
-    http_response_code(404);
-    exit('Sản phẩm không tồn tại.');
-}
-
-// Lấy thông tin sản phẩm
-$stmt = $pdo->prepare(
-    "SELECT p.*, c.name AS category_name, c.id AS category_id
-     FROM products p
-     LEFT JOIN categories c ON c.id = p.category_id
-     WHERE p.id = ? AND p.deleted_at IS NULL AND p.status = 'active'
-     LIMIT 1"
-);
-$stmt->execute([$productId]);
-$product = $stmt->fetch(PDO::FETCH_ASSOC);
-
-if (!$product) {
-    http_response_code(404);
-    exit('Sản phẩm không tồn tại hoặc đã bị ẩn.');
-}
-
-// Lấy gallery ảnh (ảnh primary đứng đầu)
-$imgStmt = $pdo->prepare(
-    "SELECT * FROM product_images
-     WHERE product_id = ?
-     ORDER BY is_primary DESC, id ASC"
-);
-$imgStmt->execute([$productId]);
-$images = $imgStmt->fetchAll(PDO::FETCH_ASSOC);
-
-// Kiểm tra wishlist (nếu đã đăng nhập)
-$isWishlisted = false;
-$wishlistId   = null;
-if (!empty($_SESSION['user_id'])) {
-    $wStmt = $pdo->prepare(
-        "SELECT id FROM wishlists
-         WHERE user_id = ? AND product_id = ? LIMIT 1"
-    );
-    $wStmt->execute([$_SESSION['user_id'], $productId]);
-    $wRow = $wStmt->fetch(PDO::FETCH_ASSOC);
-    if ($wRow) {
-        $isWishlisted = true;
-        $wishlistId   = (int) $wRow['id'];
-    }
-}
-
-// Lấy sản phẩm liên quan (cùng danh mục, loại trừ sản phẩm hiện tại)
-$relStmt = $pdo->prepare(
-    "SELECT p.*,
-            (SELECT pi.image_path FROM product_images pi
-             WHERE pi.product_id = p.id AND pi.is_primary = 1
-             LIMIT 1) AS primary_image
-     FROM products p
-     WHERE p.category_id = ? AND p.id != ?
-       AND p.deleted_at IS NULL AND p.status = 'active'
-     ORDER BY RAND()
-     LIMIT 8"
-);
-$relStmt->execute([$product['category_id'], $productId]);
-$relatedProducts = $relStmt->fetchAll(PDO::FETCH_ASSOC);
-
+/**
+ * views/user/product_detail.php
+ * Lưu ý: KHÔNG viết câu lệnh SQL ở đây. Dữ liệu $product, $images, $relatedProducts
+ * đã được ProductController lấy từ Database và truyền sang an toàn.
+ */
 
 $hasSale      = !empty($product['sale_price']) && (float)$product['sale_price'] < (float)$product['price'];
 $displayPrice = $hasSale ? $product['sale_price'] : $product['price'];
 $inStock      = (int)($product['stock'] ?? 0) > 0;
 $isLoggedIn   = !empty($_SESSION['user_id']);
 
-// Ảnh chính (primary hoặc ảnh đầu tiên trong danh sách)
-$mainImage    = !empty($images[0]['image_path']) ? '/' . $images[0]['image_path'] : '/public/assets/img/no-image.png';
+// Đã fix lỗi mất BASE_URL ở ảnh
+$mainImage    = !empty($images[0]['image_path']) ? BASE_URL . '/' . $images[0]['image_path'] : BASE_URL . '/public/assets/img/no-image.png';
 ?>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($product['name']) ?> — TechGalaxy</title>
+    <title><?= htmlspecialchars($product['name'] ?? 'Chi tiết sản phẩm') ?> — TechGalaxy</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -282,16 +212,15 @@ $mainImage    = !empty($images[0]['image_path']) ? '/' . $images[0]['image_path'
 </head>
 <body>
 
-<!-- NAVBAR -->
 <nav class="navbar navbar-expand-lg sticky-top shadow-sm">
     <div class="container">
-        <a class="navbar-brand" href="/"><i class="bi bi-stars me-1"></i>TechGalaxy</a>
+        <a class="navbar-brand" href="<?= BASE_URL ?>/"><i class="bi bi-stars me-1"></i>TechGalaxy</a>
         <div class="ms-auto d-flex align-items-center gap-2">
             <?php if ($isLoggedIn): ?>
-                <a href="/wishlist" class="btn btn-outline-danger btn-sm"><i class="bi bi-heart me-1"></i>Yêu thích</a>
-                <a href="/logout" class="btn btn-outline-secondary btn-sm">Đăng xuất</a>
+                <a href="<?= BASE_URL ?>/wishlist" class="btn btn-outline-danger btn-sm"><i class="bi bi-heart me-1"></i>Yêu thích</a>
+                <a href="<?= BASE_URL ?>/logout" class="btn btn-outline-secondary btn-sm">Đăng xuất</a>
             <?php else: ?>
-                <a href="/login" class="btn btn-primary btn-sm">Đăng nhập</a>
+                <a href="<?= BASE_URL ?>/login" class="btn btn-primary btn-sm">Đăng nhập</a>
             <?php endif; ?>
         </div>
     </div>
@@ -299,41 +228,36 @@ $mainImage    = !empty($images[0]['image_path']) ? '/' . $images[0]['image_path'
 
 <div class="container py-4">
 
-    <!-- Breadcrumb -->
     <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
-            <li class="breadcrumb-item"><a href="/shop">Shop</a></li>
+            <li class="breadcrumb-item"><a href="<?= BASE_URL ?>/">Trang chủ</a></li>
+            <li class="breadcrumb-item"><a href="<?= BASE_URL ?>/shop">Shop</a></li>
             <?php if (!empty($product['category_name'])): ?>
                 <li class="breadcrumb-item">
-                    <a href="/shop?category=<?= $product['category_id'] ?>">
+                    <a href="<?= BASE_URL ?>/shop?category=<?= $product['category_id'] ?>">
                         <?= htmlspecialchars($product['category_name']) ?>
                     </a>
                 </li>
             <?php endif; ?>
-            <li class="breadcrumb-item active"><?= htmlspecialchars($product['name']) ?></li>
+            <li class="breadcrumb-item active"><?= htmlspecialchars($product['name'] ?? '') ?></li>
         </ol>
     </nav>
 
-    <!-- ===== PRODUCT DETAIL ===== -->
     <div class="row g-4 mb-2">
 
-        <!-- ---- CỘT ẢNH ---- -->
         <div class="col-lg-5">
-            <!-- Ảnh chính -->
             <div class="gallery-main mb-3">
                 <img src="<?= htmlspecialchars($mainImage) ?>"
-                     alt="<?= htmlspecialchars($product['name']) ?>"
+                     alt="<?= htmlspecialchars($product['name'] ?? '') ?>"
                      id="mainImg">
             </div>
 
-            <!-- Thumbnail gallery -->
-            <?php if (count($images) > 1): ?>
+            <?php if (!empty($images) && count($images) > 1): ?>
                 <div class="gallery-thumbs">
                     <?php foreach ($images as $i => $img): ?>
                         <div class="thumb-item <?= $i === 0 ? 'active' : '' ?>"
-                             onclick="switchImage(this, '<?= htmlspecialchars('/' . $img['image_path']) ?>')">
-                            <img src="<?= htmlspecialchars('/' . $img['image_path']) ?>"
+                             onclick="switchImage(this, '<?= BASE_URL . '/' . htmlspecialchars($img['image_path']) ?>')">
+                            <img src="<?= BASE_URL . '/' . htmlspecialchars($img['image_path']) ?>"
                                  alt="Ảnh <?= $i + 1 ?>"
                                  loading="lazy">
                         </div>
@@ -342,19 +266,15 @@ $mainImage    = !empty($images[0]['image_path']) ? '/' . $images[0]['image_path'
             <?php endif; ?>
         </div>
 
-        <!-- ---- CỘT THÔNG TIN ---- -->
         <div class="col-lg-7">
             <div class="info-card">
-                <!-- Danh mục -->
                 <div class="product-category">
                     <i class="bi bi-tag me-1"></i>
                     <?= htmlspecialchars($product['category_name'] ?? 'Chưa phân loại') ?>
                 </div>
 
-                <!-- Tên sản phẩm -->
-                <h1 class="product-title"><?= htmlspecialchars($product['name']) ?></h1>
+                <h1 class="product-title"><?= htmlspecialchars($product['name'] ?? '') ?></h1>
 
-                <!-- Giá -->
                 <div class="price-box">
                     <span class="price-current"><?= formatPrice((float)$displayPrice) ?></span>
                     <?php if ($hasSale): ?>
@@ -364,13 +284,12 @@ $mainImage    = !empty($images[0]['image_path']) ? '/' . $images[0]['image_path'
                     <?php endif; ?>
                 </div>
 
-                <!-- Trạng thái kho -->
                 <div>
                     <span class="stock-badge <?= $inStock ? 'stock-in' : 'stock-out' ?>">
                         <i class="bi bi-<?= $inStock ? 'check-circle' : 'x-circle' ?>"></i>
                         <?php if ($inStock): ?>
                             Còn hàng
-                            <?php if ((int)$product['stock'] <= 10): ?>
+                            <?php if ((int)($product['stock'] ?? 0) <= 10): ?>
                                 (chỉ còn <?= $product['stock'] ?> sản phẩm)
                             <?php endif; ?>
                         <?php else: ?>
@@ -381,7 +300,6 @@ $mainImage    = !empty($images[0]['image_path']) ? '/' . $images[0]['image_path'
 
                 <hr class="divider">
 
-                <!-- Mô tả ngắn -->
                 <?php if (!empty($product['description'])): ?>
                     <div class="mb-3" style="color:#374151; font-size:.93rem; line-height:1.65;">
                         <?= nl2br(htmlspecialchars(mb_substr($product['description'], 0, 300))) ?>
@@ -390,23 +308,20 @@ $mainImage    = !empty($images[0]['image_path']) ? '/' . $images[0]['image_path'
                     <hr class="divider">
                 <?php endif; ?>
 
-                <!-- ACTION BUTTONS -->
                 <div class="d-flex flex-wrap gap-2">
-                    <!-- Nút Wishlist (Toggle) -->
-                    <button class="btn-wishlist-toggle <?= $isWishlisted ? 'active' : '' ?>"
+                    <button class="btn-wishlist-toggle <?= !empty($isWishlisted) ? 'active' : '' ?>"
                             id="wishlistBtn"
-                            onclick="toggleWishlist(<?= $product['id'] ?>)"
+                            onclick="toggleWishlist(<?= $product['id'] ?? 0 ?>)"
                             <?= !$isLoggedIn ? 'title="Đăng nhập để thêm vào yêu thích"' : '' ?>>
-                        <i class="bi bi-heart<?= $isWishlisted ? '-fill' : '' ?>" id="wishlistIcon"></i>
+                        <i class="bi bi-heart<?= !empty($isWishlisted) ? '-fill' : '' ?>" id="wishlistIcon"></i>
                         <span id="wishlistText">
-                            <?= $isWishlisted ? 'Đã yêu thích' : 'Thêm vào yêu thích' ?>
+                            <?= !empty($isWishlisted) ? 'Đã yêu thích' : 'Thêm vào yêu thích' ?>
                         </span>
                     </button>
                 </div>
 
                 <hr class="divider">
 
-                <!-- Thông tin thêm -->
                 <div class="row g-2" style="font-size:.85rem; color:var(--text-muted);">
                     <div class="col-6 d-flex align-items-center gap-2">
                         <i class="bi bi-shield-check text-success"></i> Bảo hành chính hãng
@@ -425,7 +340,6 @@ $mainImage    = !empty($images[0]['image_path']) ? '/' . $images[0]['image_path'
         </div>
     </div>
 
-    <!-- ===== MÔ TẢ ĐẦY ĐỦ ===== -->
     <?php if (!empty($product['description'])): ?>
         <div class="desc-card">
             <h5><i class="bi bi-file-text me-2 text-primary"></i>Mô tả sản phẩm</h5>
@@ -435,7 +349,6 @@ $mainImage    = !empty($images[0]['image_path']) ? '/' . $images[0]['image_path'
         </div>
     <?php endif; ?>
 
-    <!-- ===== SẢN PHẨM LIÊN QUAN ===== -->
     <?php if (!empty($relatedProducts)): ?>
         <div class="related-section">
             <div class="section-title">
@@ -447,10 +360,10 @@ $mainImage    = !empty($images[0]['image_path']) ? '/' . $images[0]['image_path'
                     <?php
                     $rpHasSale = !empty($rp['sale_price']) && $rp['sale_price'] < $rp['price'];
                     $rpPrice   = $rpHasSale ? $rp['sale_price'] : $rp['price'];
-                    $rpImg     = !empty($rp['primary_image']) ? '/' . $rp['primary_image'] : '/public/assets/img/no-image.png';
+                    $rpImg     = !empty($rp['primary_image']) ? BASE_URL . '/' . $rp['primary_image'] : BASE_URL . '/public/assets/img/no-image.png';
                     ?>
                     <div class="col">
-                        <a href="/product/<?= $rp['id'] ?>" class="text-decoration-none">
+                        <a href="<?= BASE_URL ?>/product/<?= $rp['id'] ?>" class="text-decoration-none">
                             <div class="related-card">
                                 <div class="related-card__img">
                                     <img src="<?= htmlspecialchars($rpImg) ?>"
@@ -469,10 +382,7 @@ $mainImage    = !empty($images[0]['image_path']) ? '/' . $images[0]['image_path'
         </div>
     <?php endif; ?>
 
-</div><!-- /container -->
-
-<!-- TOAST -->
-<div class="toast-container">
+</div><div class="toast-container">
     <div id="wishlistToast" class="toast align-items-center border-0" role="alert">
         <div class="d-flex">
             <div class="toast-body fw-medium" id="toastMsg"></div>
@@ -484,7 +394,7 @@ $mainImage    = !empty($images[0]['image_path']) ? '/' . $images[0]['image_path'
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 const IS_LOGGED_IN   = <?= $isLoggedIn ? 'true' : 'false' ?>;
-let   isWishlisted   = <?= $isWishlisted ? 'true' : 'false' ?>;
+let   isWishlisted   = <?= !empty($isWishlisted) ? 'true' : 'false' ?>;
 
 /* ---------- Gallery ---------- */
 function switchImage(thumb, src) {
@@ -496,7 +406,7 @@ function switchImage(thumb, src) {
 /* ---------- Wishlist Toggle ---------- */
 async function toggleWishlist(productId) {
     if (!IS_LOGGED_IN) {
-        window.location.href = '/login?redirect=' + encodeURIComponent(window.location.href);
+        window.location.href = '<?= BASE_URL ?>/login?redirect=' + encodeURIComponent(window.location.href);
         return;
     }
 
@@ -509,7 +419,7 @@ async function toggleWishlist(productId) {
         const fd = new FormData();
         fd.append('product_id', productId);
 
-        const res  = await fetch('/ajax/wishlist/toggle', { method: 'POST', body: fd });
+        const res  = await fetch('<?= BASE_URL ?>/ajax/wishlist/toggle', { method: 'POST', body: fd });
         const data = await res.json();
 
         if (data.success) {

@@ -305,3 +305,21 @@ class WishlistController
         exit;
     }
 }
+// ===== THÊM ĐOẠN ROUTING NÀY VÀO DƯỚI CÙNG =====
+$wishlistCtrl = new \Controllers\WishlistController();
+
+$uri      = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$basePath = parse_url(BASE_URL, PHP_URL_PATH) ?: '';
+$path     = trim((string) preg_replace('#^' . preg_quote($basePath, '#') . '#', '', $uri), '/');
+
+if ($path === 'wishlist') {
+    $wishlistCtrl->index();
+} elseif ($path === 'ajax/wishlist/toggle' || $path === 'wishlist/toggle') {
+    $wishlistCtrl->ajaxToggle();
+} elseif ($path === 'ajax/wishlist/remove' || $path === 'wishlist/remove') {
+    $wishlistCtrl->ajaxRemove();
+} elseif ($path === 'ajax/wishlist/add' || $path === 'wishlist/add') {
+    $wishlistCtrl->ajaxAdd();
+} elseif ($path === 'ajax/wishlist/count' || $path === 'wishlist/count') {
+    $wishlistCtrl->ajaxCount();
+}

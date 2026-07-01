@@ -97,7 +97,11 @@ if (strpos($path, 'admin/customers') === 0) {
 if (strpos($path, 'admin/posts') === 0) {
     require __DIR__ . '/controllers/PostController.php'; exit;
 }
-
+// Xử lý các request AJAX cho wishlist
+if (strpos($path, 'ajax/wishlist') === 0) {
+    require __DIR__ . '/controllers/WishlistController.php';
+    exit;
+}
 
 // --- Route động: Chi tiết sản phẩm (/shop/{slug} hoặc /product/{id}) ---
 if (preg_match('@^shop/([a-z0-9\-]+)$@', $path) ||

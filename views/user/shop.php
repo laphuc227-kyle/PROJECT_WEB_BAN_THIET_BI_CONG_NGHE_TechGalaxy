@@ -325,13 +325,13 @@ $isLoggedIn = !empty($_SESSION['user_id']);
 <!-- ===== NAVBAR ===== -->
 <nav class="navbar navbar-expand-lg sticky-top shadow-sm">
     <div class="container">
-        <a class="navbar-brand" href="/"><i class="bi bi-stars me-1"></i>TechGalaxy</a>
+        <a class="navbar-brand" href="<?= BASE_URL ?>/"><i class="bi bi-stars me-1"></i>TechGalaxy</a>
         <div class="ms-auto d-flex align-items-center gap-2">
             <?php if ($isLoggedIn): ?>
-                <a href="/wishlist" class="btn btn-outline-danger btn-sm"><i class="bi bi-heart me-1"></i>Yêu thích</a>
-                <a href="/logout" class="btn btn-outline-secondary btn-sm">Đăng xuất</a>
+                <a href="<?= BASE_URL ?>/wishlist" class="btn btn-outline-danger btn-sm"><i class="bi bi-heart me-1"></i>Yêu thích</a>
+                <a href="<?= BASE_URL ?>/logout" class="btn btn-outline-secondary btn-sm">Đăng xuất</a>
             <?php else: ?>
-                <a href="/login" class="btn btn-primary btn-sm">Đăng nhập</a>
+                <a href="<?= BASE_URL ?>/login" class="btn btn-primary btn-sm">Đăng nhập</a>
             <?php endif; ?>
         </div>
     </div>
@@ -410,20 +410,20 @@ $isLoggedIn = !empty($_SESSION['user_id']);
 
                 <!-- Clear filter -->
                 <?php if (!empty($searchKeyword) || $selectedCategory): ?>
-                    <a href="/shop" class="btn btn-outline-secondary btn-sm">
-                        <i class="bi bi-x-circle me-1"></i>Xóa bộ lọc
-                    </a>
+                    <a href="<?= BASE_URL ?>/shop" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-x-circle me-1"></i>Xóa bộ lọc
+</a>
                 <?php endif; ?>
             </div>
 
             <!-- ===== PRODUCT GRID ===== -->
             <?php if (empty($products)): ?>
                 <div class="empty-state">
-                    <div><i class="bi bi-search"></i></div>
-                    <h5 class="fw-semibold">Không tìm thấy sản phẩm</h5>
-                    <p>Thử tìm kiếm với từ khóa khác hoặc xóa bộ lọc.</p>
-                    <a href="/shop" class="btn btn-primary">Xem tất cả sản phẩm</a>
-                </div>
+    <div><i class="bi bi-search"></i></div>
+    <h5 class="fw-semibold">Không tìm thấy sản phẩm</h5>
+    <p>Thử tìm kiếm với từ khóa khác hoặc xóa bộ lọc.</p>
+    <a href="<?= BASE_URL ?>/shop" class="btn btn-primary">Xem tất cả sản phẩm</a>
+</div>
             <?php else: ?>
                 <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-3 mb-4">
                     <?php foreach ($products as $p): ?>
@@ -478,11 +478,11 @@ $isLoggedIn = !empty($_SESSION['user_id']);
 
                                 <!-- Footer actions -->
                                 <div class="product-card__footer">
-                                    <a href="/product/<?= $p['id'] ?>"
-                                       class="btn btn-outline-primary btn-detail">
-                                        <i class="bi bi-eye me-1"></i>Xem chi tiết
-                                    </a>
-                                </div>
+    <a href="<?= BASE_URL ?>/product/<?= $p['id'] ?>"
+       class="btn btn-outline-primary btn-detail">
+        <i class="bi bi-eye me-1"></i>Xem chi tiết
+    </a>
+</div>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -565,10 +565,10 @@ async function toggleWishlist(btn, productId) {
         const formData = new FormData();
         formData.append('product_id', productId);
 
-        const res = await fetch('/ajax/wishlist/toggle', {
-            method: 'POST',
-            body: formData,
-        });
+       const res = await fetch('<?= BASE_URL ?>/ajax/wishlist/toggle', {
+    method: 'POST',
+    body: formData,
+});
         const data = await res.json();
 
         if (data.success) {

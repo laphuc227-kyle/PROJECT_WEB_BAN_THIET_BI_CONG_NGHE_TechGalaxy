@@ -8,10 +8,6 @@
  *  - $flashType     string       Loại alert: success | danger | warning | info
  */
 
-function formatPrice(float $price): string
-{
-    return number_format($price, 0, ',', '.') . 'đ';
-}
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -182,10 +178,8 @@ function formatPrice(float $price): string
     <div class="container">
         <a class="navbar-brand" href="/"><i class="bi bi-stars me-1"></i>TechGalaxy</a>
         <div class="ms-auto d-flex align-items-center gap-2">
-            <a href="/shop" class="btn btn-outline-primary btn-sm">
-                <i class="bi bi-shop me-1"></i>Tiếp tục mua sắm
-            </a>
-            <a href="/logout" class="btn btn-outline-secondary btn-sm">Đăng xuất</a>
+            <a href="<?= BASE_URL ?>/shop" class="btn btn-outline-primary btn-sm">Tiếp tục mua sắm</a>
+            <a href="<?= BASE_URL ?>/logout" class="btn btn-outline-secondary btn-sm">Đăng xuất</a>
         </div>
     </div>
 </nav>
@@ -225,8 +219,7 @@ function formatPrice(float $price): string
             <div class="empty-state__icon"><i class="bi bi-heart"></i></div>
             <h4>Chưa có sản phẩm yêu thích</h4>
             <p class="mb-4">Hãy khám phá shop và nhấn nút ❤ để thêm sản phẩm vào đây.</p>
-            <a href="/shop" class="btn btn-primary px-4">
-                <i class="bi bi-shop me-1"></i>Khám phá ngay
+            <a href="<?= BASE_URL ?>/shop" class="btn btn-primary px-4">Khám phá ngay
             </a>
         </div>
     <?php else: ?>
@@ -278,7 +271,7 @@ function formatPrice(float $price): string
 
                     <!-- Actions -->
                     <div class="wishlist-item__actions">
-                        <a href="/product/<?= $item['product_id'] ?>"
+                        <a href="<?= BASE_URL ?>/product/<?= $item['product_id'] ?>"
                            class="btn btn-outline-primary btn-view">
                             <i class="bi bi-eye me-1"></i>Xem
                         </a>
@@ -319,7 +312,7 @@ async function removeFromWishlist(wishlistId, productId) {
         const fd = new FormData();
         fd.append('product_id', productId);
 
-        const res  = await fetch('/ajax/wishlist/remove', { method: 'POST', body: fd });
+const res = await fetch('<?= BASE_URL ?>/ajax/wishlist/remove', { method: 'POST', body: fd });
         const data = await res.json();
 
         if (data.success) {

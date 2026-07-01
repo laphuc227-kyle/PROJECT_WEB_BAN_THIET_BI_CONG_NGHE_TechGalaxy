@@ -285,13 +285,13 @@ $mainImage    = !empty($images[0]['image_path']) ? '/' . $images[0]['image_path'
 <!-- NAVBAR -->
 <nav class="navbar navbar-expand-lg sticky-top shadow-sm">
     <div class="container">
-        <a class="navbar-brand" href="/"><i class="bi bi-stars me-1"></i>TechGalaxy</a>
+        <a class="navbar-brand" href="<?= BASE_URL ?>/"><i class="bi bi-stars me-1"></i>TechGalaxy</a>
         <div class="ms-auto d-flex align-items-center gap-2">
             <?php if ($isLoggedIn): ?>
-                <a href="/wishlist" class="btn btn-outline-danger btn-sm"><i class="bi bi-heart me-1"></i>Yêu thích</a>
-                <a href="/logout" class="btn btn-outline-secondary btn-sm">Đăng xuất</a>
+                <a href="<?= BASE_URL ?>/wishlist" class="btn btn-outline-danger btn-sm"><i class="bi bi-heart me-1"></i>Yêu thích</a>
+                <a href="<?= BASE_URL ?>/logout" class="btn btn-outline-secondary btn-sm">Đăng xuất</a>
             <?php else: ?>
-                <a href="/login" class="btn btn-primary btn-sm">Đăng nhập</a>
+                <a href="<?= BASE_URL ?>/login" class="btn btn-primary btn-sm">Đăng nhập</a>
             <?php endif; ?>
         </div>
     </div>
@@ -302,11 +302,11 @@ $mainImage    = !empty($images[0]['image_path']) ? '/' . $images[0]['image_path'
     <!-- Breadcrumb -->
     <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
-            <li class="breadcrumb-item"><a href="/shop">Shop</a></li>
+            <li class="breadcrumb-item"><a href="<?= BASE_URL ?>/">Trang chủ</a></li>
+            <li class="breadcrumb-item"><a href="<?= BASE_URL ?>/shop">Shop</a></li>
             <?php if (!empty($product['category_name'])): ?>
                 <li class="breadcrumb-item">
-                    <a href="/shop?category=<?= $product['category_id'] ?>">
+                    <a href="<?= BASE_URL ?>/shop?category=<?= $product['category_id'] ?>">
                         <?= htmlspecialchars($product['category_name']) ?>
                     </a>
                 </li>
@@ -450,7 +450,7 @@ $mainImage    = !empty($images[0]['image_path']) ? '/' . $images[0]['image_path'
                     $rpImg     = !empty($rp['primary_image']) ? '/' . $rp['primary_image'] : '/public/assets/img/no-image.png';
                     ?>
                     <div class="col">
-                        <a href="/product/<?= $rp['id'] ?>" class="text-decoration-none">
+                        <a href="<?= BASE_URL ?>/product/<?= $rp['id'] ?>" class="text-decoration-none">
                             <div class="related-card">
                                 <div class="related-card__img">
                                     <img src="<?= htmlspecialchars($rpImg) ?>"
@@ -509,7 +509,7 @@ async function toggleWishlist(productId) {
         const fd = new FormData();
         fd.append('product_id', productId);
 
-        const res  = await fetch('/ajax/wishlist/toggle', { method: 'POST', body: fd });
+        const res  = await fetch('<?= BASE_URL ?>/ajax/wishlist/toggle', { method: 'POST', body: fd });
         const data = await res.json();
 
         if (data.success) {

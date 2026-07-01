@@ -1,9 +1,11 @@
 <?php
 declare(strict_types=1);
 
+namespace Models;
+
 require_once __DIR__ . '/BaseModel.php';
 
-class Coupon extends BaseModel
+class Coupon extends \BaseModel
 {
     protected string $table = 'coupons';
 

@@ -78,18 +78,6 @@ class ProductController
         require_once __DIR__ . '/../views/user/shop.php';
     }
 
-    // Thêm hàm này vào trong class ProductController (ngang hàng với hàm shop)
-    public function home() 
-    {
-        // Giả sử trang chủ cần hiển thị sản phẩm mới hoặc sản phẩm nổi bật
-        // Bạn có thể gọi model lấy data ở đây nếu Thuận cần dữ liệu
-        // $featuredProducts = $this->productModel->getFeaturedProducts(); 
-
-        // Nạp file giao diện trang chủ thực sự của Thuận
-        require_once __DIR__ . '/../views/user/index.php';
-    }
-
-
     /**
      * Trang Product Detail — Chi tiết sản phẩm
      * URL: /product/{id}
@@ -426,11 +414,10 @@ class ProductController
     /**
      * Kiểm tra đăng nhập — nếu chưa thì redirect login
      */
-
-     private function requireLogin(): void
+    private function requireLogin(): void
     {
         if (empty($_SESSION['user_id'])) {
-            header('Location: ' . BASE_URL . '/login?redirect=' . urlencode($_SERVER['REQUEST_URI']));
+            header('Location: /login?redirect=' . urlencode($_SERVER['REQUEST_URI']));
             exit;
         }
     }
@@ -438,11 +425,10 @@ class ProductController
     /**
      * Kiểm tra đăng nhập cho AJAX — trả JSON 401 nếu chưa đăng nhập
      */
-
-     private function requireLoginJson(): void
+    private function requireLoginJson(): void
     {
         if (empty($_SESSION['user_id'])) {
-            $this->jsonResponse(['success' => false, 'message' => 'Vui lòng đăng nhập để thực hiện.', 'redirect' => BASE_URL . '/login'], 401);
+            $this->jsonResponse(['success' => false, 'message' => 'Vui lòng đăng nhập để thực hiện.', 'redirect' => '/login'], 401);
             exit;
         }
     }
@@ -523,7 +509,7 @@ class ProductController
     private function requireAdmin(): void
     {
         if (empty($_SESSION['user_id']) || ($_SESSION['user_role'] ?? '') !== 'admin') {
-            header('Location: ' . BASE_URL . '/login');
+            header('Location: /login');
             exit;
         }
     }
@@ -548,5 +534,24 @@ class ProductController
         header('Content-Type: application/json; charset=UTF-8');
         echo json_encode($data, JSON_UNESCAPED_UNICODE);
         exit;
+    }
+}
+
+$productController = new ProductController();
+$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+
+if (strpos($uri, '/admin/products/create') !== false) {
+    $productController->adminCreate();
+} elseif (preg_match('#/admin/products/(\d+)/edit#', $uri, $matches)) {
+    $productController->adminEdit((int)$matches[1]);
+} elseif (preg_match('#/admin/products/(\d+)/delete#', $uri, $matches)) {
+    $productController->adminDelete((int)$matches[1]);
+} elseif (strpos($uri, '/admin/products') !== false) {
+    $productController->adminIndex();
+} else {
+    if (preg_match('#/product/(\d+)#', $uri, $matches)) {
+        $productController->productDetail((int)$matches[1]);
+    } else {
+        $productController->shop();
     }
 }

@@ -289,4 +289,23 @@ class Product
         $slug = preg_replace('/[\s]+/', '-', trim($slug));
         return $slug;
     }
+
+    /**
+     * Tìm một sản phẩm theo ID (Dùng cho Giỏ hàng)
+     */
+    public function findById(int $id)
+    {
+        // Khai báo biến toàn cục để lấy kết nối Database theo phong cách của file Product
+        global $pdo; 
+        
+        $stmt = $pdo->prepare(
+            "SELECT * FROM products 
+             WHERE id = ? AND deleted_at IS NULL AND status = 1 
+             LIMIT 1"
+        );
+        $stmt->execute([$id]);
+        
+        // Trả về mảng dữ liệu nếu tìm thấy, hoặc false nếu không thấy
+        return $stmt->fetch(\PDO::FETCH_ASSOC);
+    }
 }

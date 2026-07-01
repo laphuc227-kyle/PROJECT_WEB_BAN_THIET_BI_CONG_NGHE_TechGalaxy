@@ -2,7 +2,9 @@
 // File: models/Cart.php
 declare(strict_types=1);
 
-class Cart extends BaseModel
+namespace Models;
+
+class Cart extends \BaseModel
 {
     protected string $table = 'carts';
 

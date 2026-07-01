@@ -1,12 +1,6 @@
 <?php
 // File: controllers/AuthController.php
 declare(strict_types=1);
-
-namespace Controllers;
-
-use Models\User;
-use Models\Address;
-
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 // Nạp thư viện PHPMailer và file cấu hình mail
@@ -16,9 +10,8 @@ class AuthController {
     private User $userModel;
     private Address $addressModel;
     public function __construct() {
-    // Thêm \Models\ vào trước để Autoloader tự chạy tìm file trong thư mục models/
-        $this->userModel = new \Models\User();
-        $this->addressModel = new \Models\Address();
+        $this->userModel = new User();
+        $this->addressModel = new Address();
     }
     /**
      * Hàm gửi email OTP Quên mật khẩu
@@ -79,9 +72,6 @@ class AuthController {
             return;
         }
         $user = $this->userModel->getByEmail($email);
-
-
-        
         if (!$user) {
             setFlash('error', 'Email hoặc mật khẩu không chính xác.');
             $this->showLogin();

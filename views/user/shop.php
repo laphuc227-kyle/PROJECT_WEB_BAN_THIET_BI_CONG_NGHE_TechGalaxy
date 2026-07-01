@@ -1,17 +1,96 @@
 <?php
+// ===== LẤY DỮ LIỆU SẢN PHẨM & DANH MỤC =====
+require_once __DIR__ . '/../../models/Post.php'; // đã có BaseModel
+require_once __DIR__ . '/../../config/database.php';
+
+global $pdo;
+
+// Lấy tham số từ URL
+$currentPage       = max(1, (int) ($_GET['page'] ?? 1));
+$searchKeyword     = trim($_GET['q'] ?? '');
+$selectedCategory  = $_GET['category'] ?? ''; // có thể là slug hoặc id
+$perPage           = 12;
+$offset            = ($currentPage - 1) * $perPage;
+
+// Xây dựng điều kiện WHERE động
+$where  = "p.deleted_at IS NULL AND p.status = 1";
+$params = [];
+
+if ($searchKeyword !== '') {
+    // Tìm kiếm theo: Tên sản phẩm HOẶC Mô tả sản phẩm HOẶC Tên danh mục
+    $where   .= " AND (p.name LIKE ? OR p.description LIKE ? OR c.name LIKE ?)";
+    $params[] = "%{$searchKeyword}%"; 
+    $params[] = "%{$searchKeyword}%"; 
+    $params[] = "%{$searchKeyword}%"; 
+}
+
+if ($selectedCategory !== '') {
+    // Hỗ trợ cả slug (vd: "laptop") lẫn id (vd: "2")
+    if (is_numeric($selectedCategory)) {
+        $where   .= " AND p.category_id = ?";
+        $params[] = (int) $selectedCategory;
+    } else {
+        $where   .= " AND c.slug = ?";
+        $params[] = $selectedCategory;
+    }
+}
+
+// Đếm tổng sản phẩm
+$countStmt = $pdo->prepare(
+    "SELECT COUNT(*) FROM products p
+     LEFT JOIN categories c ON c.id = p.category_id
+     WHERE {$where}"
+);
+$countStmt->execute($params);
+$totalProducts = (int) $countStmt->fetchColumn();
+$totalPages    = (int) ceil($totalProducts / $perPage);
+
+// Lấy danh sách sản phẩm theo trang
+$productParams   = array_merge($params, [$perPage, $offset]);
+$productStmt     = $pdo->prepare(
+    "SELECT p.*, c.name AS category_name, c.slug AS category_slug,
+            (SELECT pi.image_path FROM product_images pi
+             WHERE pi.product_id = p.id AND pi.is_primary = 1
+             LIMIT 1) AS primary_image
+     FROM products p
+     LEFT JOIN categories c ON c.id = p.category_id
+     WHERE {$where}
+     ORDER BY p.created_at DESC
+     LIMIT ? OFFSET ?"
+);
+// Bind LIMIT và OFFSET riêng vì cần PARAM_INT
+foreach ($params as $i => $val) {
+    $productStmt->bindValue($i + 1, $val);
+}
+$productStmt->bindValue(count($params) + 1, $perPage, PDO::PARAM_INT);
+$productStmt->bindValue(count($params) + 2, $offset,  PDO::PARAM_INT);
+$productStmt->execute();
+$products = $productStmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Lấy danh mục cho sidebar
+$catStmt = $pdo->prepare(
+    "SELECT c.*, COUNT(p.id) AS product_count
+     FROM categories c
+     LEFT JOIN products p ON p.category_id = c.id
+         AND p.deleted_at IS NULL AND p.status = 1
+     GROUP BY c.id
+     ORDER BY c.name ASC"
+);
+$catStmt->execute();
+$categories = $catStmt->fetchAll(PDO::FETCH_ASSOC);
 /**
  * views/user/shop.php
  *
- * Lưu ý: TUYỆT ĐỐI KHÔNG viết câu lệnh SQL ở đây!
- * Các biến dưới đây đã được ProductController::shop() lấy từ Database và truyền sang:
- * - $products        array   Danh sách sản phẩm
- * - $categories      array   Danh sách danh mục (sidebar)
- * - $totalProducts   int     Tổng số sản phẩm
- * - $totalPages      int     Tổng số trang
- * - $currentPage     int     Trang hiện tại
- * - $searchKeyword   string  Từ khóa tìm kiếm
- * - $selectedCategory int|null  ID danh mục đang lọc
+ * Biến được truyền từ ProductController::shop():
+ *  - $products        array   Danh sách sản phẩm
+ *  - $categories      array   Danh sách danh mục (sidebar)
+ *  - $totalProducts   int     Tổng số sản phẩm
+ *  - $totalPages      int     Tổng số trang
+ *  - $currentPage     int     Trang hiện tại
+ *  - $searchKeyword   string  Từ khóa tìm kiếm
+ *  - $selectedCategory int|null  ID danh mục đang lọc
  */
+
 
 // Helper: tạo URL query string giữ các tham số hiện tại, chỉ thay thế 1 tham số
 function buildQuery(array $override = []): string
@@ -21,10 +100,9 @@ function buildQuery(array $override = []): string
         'category' => $_GET['category'] ?? '',
         'page'     => $_GET['page']     ?? 1,
     ], $override);
-
     // Loại bỏ tham số rỗng
     $params = array_filter($params, fn($v) => $v !== '' && $v !== null);
-    return BASE_URL . '/shop?' . http_build_query($params);
+    return '?' . http_build_query($params);
 }
 
 // Kiểm tra user đã đăng nhập
@@ -246,6 +324,7 @@ $isLoggedIn = !empty($_SESSION['user_id']);
 </head>
 <body>
 
+<!-- ===== NAVBAR ===== -->
 <nav class="navbar navbar-expand-lg sticky-top shadow-sm">
     <div class="container">
         <a class="navbar-brand" href="<?= BASE_URL ?>/"><i class="bi bi-stars me-1"></i>TechGalaxy</a>
@@ -263,7 +342,9 @@ $isLoggedIn = !empty($_SESSION['user_id']);
 <div class="container py-4">
     <div class="row g-4">
 
+        <!-- ===== SIDEBAR ===== -->
         <div class="col-lg-3">
+            <!-- Search -->
             <div class="sidebar-card">
                 <h6><i class="bi bi-search me-1"></i>Tìm kiếm</h6>
                 <form method="GET" class="search-bar">
@@ -273,7 +354,7 @@ $isLoggedIn = !empty($_SESSION['user_id']);
                     <div class="input-group">
                         <input type="text" name="q" class="form-control form-control-sm"
                                placeholder="Tên sản phẩm..."
-                               value="<?= htmlspecialchars($searchKeyword ?? '') ?>">
+                               value="<?= htmlspecialchars($searchKeyword) ?>">
                         <button class="btn btn-primary btn-sm" type="submit">
                             <i class="bi bi-search"></i>
                         </button>
@@ -281,27 +362,31 @@ $isLoggedIn = !empty($_SESSION['user_id']);
                 </form>
             </div>
 
+            <!-- Danh mục -->
             <div class="sidebar-card">
                 <h6><i class="bi bi-grid me-1"></i>Danh mục</h6>
                 <nav class="d-flex flex-column gap-1">
+                    <!-- Tất cả -->
                     <a href="<?= buildQuery(['category' => '', 'page' => 1]) ?>"
-                       class="category-link <?= empty($selectedCategory) ? 'active' : '' ?>">
+                       class="category-link <?= $selectedCategory === null ? 'active' : '' ?>">
                         <span><i class="bi bi-collection me-1"></i>Tất cả sản phẩm</span>
-                        <span class="badge"><?= $totalProducts ?? 0 ?></span>
+                        <span class="badge"><?= $totalProducts ?></span>
                     </a>
-                    <?php if(!empty($categories)): foreach ($categories as $cat): ?>
+                    <?php foreach ($categories as $cat): ?>
                         <a href="<?= buildQuery(['category' => $cat['id'], 'page' => 1]) ?>"
-                           class="category-link <?= ((int)$selectedCategory === (int)$cat['id']) ? 'active' : '' ?>">
+                           class="category-link <?= (int)$selectedCategory === (int)$cat['id'] ? 'active' : '' ?>">
                             <span><?= htmlspecialchars($cat['name']) ?></span>
-                            <span class="badge"><?= $cat['product_count'] ?? 0 ?></span>
+                            <span class="badge"><?= $cat['product_count'] ?></span>
                         </a>
-                    <?php endforeach; endif; ?>
+                    <?php endforeach; ?>
                 </nav>
             </div>
         </div>
 
+        <!-- ===== MAIN CONTENT ===== -->
         <div class="col-lg-9">
 
+            <!-- Header + Results info -->
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
                     <h5 class="mb-0 fw-bold">
@@ -310,10 +395,8 @@ $isLoggedIn = !empty($_SESSION['user_id']);
                         <?php elseif ($selectedCategory): ?>
                             <?php
                             $catName = '';
-                            if(!empty($categories)) {
-                                foreach ($categories as $c) {
-                                    if ((int)$c['id'] === (int)$selectedCategory) { $catName = $c['name']; break; }
-                                }
+                            foreach ($categories as $c) {
+                                if ((int)$c['id'] === (int)$selectedCategory) { $catName = $c['name']; break; }
                             }
                             echo htmlspecialchars($catName);
                             ?>
@@ -322,25 +405,27 @@ $isLoggedIn = !empty($_SESSION['user_id']);
                         <?php endif; ?>
                     </h5>
                     <p class="results-info mb-0">
-                        <?= number_format($totalProducts ?? 0) ?> sản phẩm
-                        — Trang <?= $currentPage ?? 1 ?> / <?= max(1, $totalPages ?? 1) ?>
+                        <?= number_format($totalProducts) ?> sản phẩm
+                        — Trang <?= $currentPage ?> / <?= max(1, $totalPages) ?>
                     </p>
                 </div>
 
+                <!-- Clear filter -->
                 <?php if (!empty($searchKeyword) || $selectedCategory): ?>
                     <a href="<?= BASE_URL ?>/shop" class="btn btn-outline-secondary btn-sm">
-                        <i class="bi bi-x-circle me-1"></i>Xóa bộ lọc
-                    </a>
+    <i class="bi bi-x-circle me-1"></i>Xóa bộ lọc
+</a>
                 <?php endif; ?>
             </div>
 
+            <!-- ===== PRODUCT GRID ===== -->
             <?php if (empty($products)): ?>
                 <div class="empty-state">
-                    <div><i class="bi bi-search"></i></div>
-                    <h5 class="fw-semibold">Không tìm thấy sản phẩm</h5>
-                    <p>Thử tìm kiếm với từ khóa khác hoặc xóa bộ lọc.</p>
-                    <a href="<?= BASE_URL ?>/shop" class="btn btn-primary">Xem tất cả sản phẩm</a>
-                </div>
+    <div><i class="bi bi-search"></i></div>
+    <h5 class="fw-semibold">Không tìm thấy sản phẩm</h5>
+    <p>Thử tìm kiếm với từ khóa khác hoặc xóa bộ lọc.</p>
+    <a href="<?= BASE_URL ?>/shop" class="btn btn-primary">Xem tất cả sản phẩm</a>
+</div>
             <?php else: ?>
                 <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-3 mb-4">
                     <?php foreach ($products as $p): ?>
@@ -348,11 +433,10 @@ $isLoggedIn = !empty($_SESSION['user_id']);
                         $hasSale    = !empty($p['sale_price']) && $p['sale_price'] < $p['price'];
                         $displayPrice = $hasSale ? $p['sale_price'] : $p['price'];
                         $inStock    = (int)($p['stock'] ?? 0) > 0;
-                        // Sửa lại chỗ lấy ảnh bị thiếu BASE_URL
-                        $imgSrc     = !empty($p['primary_image']) ? BASE_URL . '/' . $p['primary_image'] : BASE_URL . '/public/assets/img/no-image.png';
-                        ?>
+                        $imgSrc = !empty($p['primary_image']) ? BASE_URL . '/' . ltrim($p['primary_image'], '/') : BASE_URL . '/public/assets/img/no-image.png';                        ?>
                         <div class="col">
                             <div class="product-card">
+                                <!-- Ảnh -->
                                 <div class="product-card__img-wrap">
                                     <img src="<?= htmlspecialchars($imgSrc) ?>"
                                          alt="<?= htmlspecialchars($p['name']) ?>"
@@ -365,6 +449,7 @@ $isLoggedIn = !empty($_SESSION['user_id']);
                                         <span class="product-card__badge">-<?= $pct ?>%</span>
                                     <?php endif; ?>
 
+                                    <!-- Nút Wishlist -->
                                     <button class="btn-wishlist <?= !empty($p['is_wishlisted']) ? 'active' : '' ?>"
                                             data-product-id="<?= $p['id'] ?>"
                                             title="Thêm vào yêu thích"
@@ -373,9 +458,10 @@ $isLoggedIn = !empty($_SESSION['user_id']);
                                     </button>
                                 </div>
 
+                                <!-- Thông tin -->
                                 <div class="product-card__body">
                                     <div class="product-card__category">
-                                        <?= htmlspecialchars($p['category_name'] ?? 'Chưa phân loại') ?>
+                                        <?= htmlspecialchars($p['category_name'] ?? '') ?>
                                     </div>
                                     <div class="product-card__name">
                                         <?= htmlspecialchars($p['name']) ?>
@@ -391,20 +477,25 @@ $isLoggedIn = !empty($_SESSION['user_id']);
                                     </div>
                                 </div>
 
-                                <div class="product-card__footer">
-                                    <a href="<?= BASE_URL ?>/product/<?= $p['id'] ?>"
-                                       class="btn btn-outline-primary btn-detail">
-                                        <i class="bi bi-eye me-1"></i>Xem chi tiết
+                                <!-- Footer actions -->
+                               <div class="product-card__footer d-flex gap-2">
+                                    <a href="<?= BASE_URL ?>/product/<?= $p['id'] ?>" class="btn btn-outline-secondary btn-sm flex-grow-1" style="border-radius: 8px;" title="Xem chi tiết">
+                                        <i class="bi bi-eye"></i>
                                     </a>
+                                    <button class="btn btn-primary btn-sm flex-grow-1 fw-medium" style="border-radius: 8px;" onclick="addToCart(<?= $p['id'] ?>)" <?= !$inStock ? 'disabled' : '' ?>>
+                                        <i class="bi bi-cart-plus me-1"></i>Thêm
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     <?php endforeach; ?>
                 </div>
 
+                <!-- ===== PAGINATION ===== -->
                 <?php if ($totalPages > 1): ?>
                     <nav>
                         <ul class="pagination justify-content-center flex-wrap gap-1">
+                            <!-- Prev -->
                             <li class="page-item <?= $currentPage <= 1 ? 'disabled' : '' ?>">
                                 <a class="page-link" href="<?= buildQuery(['page' => $currentPage - 1]) ?>">
                                     <i class="bi bi-chevron-left"></i>
@@ -412,7 +503,8 @@ $isLoggedIn = !empty($_SESSION['user_id']);
                             </li>
 
                             <?php
-                            $window = 2;
+                            // Hiển thị trang đầu, dấu ..., các trang lân cận, dấu ..., trang cuối
+                            $window = 2; // số trang hiển thị mỗi bên trang hiện tại
                             $start  = max(1, $currentPage - $window);
                             $end    = min($totalPages, $currentPage + $window);
 
@@ -432,6 +524,7 @@ $isLoggedIn = !empty($_SESSION['user_id']);
                                 <li class="page-item"><a class="page-link" href="<?= buildQuery(['page' => $totalPages]) ?>"><?= $totalPages ?></a></li>
                             <?php endif; ?>
 
+                            <!-- Next -->
                             <li class="page-item <?= $currentPage >= $totalPages ? 'disabled' : '' ?>">
                                 <a class="page-link" href="<?= buildQuery(['page' => $currentPage + 1]) ?>">
                                     <i class="bi bi-chevron-right"></i>
@@ -441,7 +534,12 @@ $isLoggedIn = !empty($_SESSION['user_id']);
                     </nav>
                 <?php endif; ?>
             <?php endif; ?>
-        </div></div></div><div class="toast-container">
+        </div><!-- /col main -->
+    </div><!-- /row -->
+</div><!-- /container -->
+
+<!-- ===== TOAST ===== -->
+<div class="toast-container">
     <div id="wishlistToast" class="toast align-items-center border-0" role="alert">
         <div class="d-flex">
             <div class="toast-body fw-medium" id="toastMsg"></div>
@@ -456,23 +554,24 @@ const IS_LOGGED_IN = <?= $isLoggedIn ? 'true' : 'false' ?>;
 
 /**
  * Toggle Wishlist qua AJAX
+ * Nếu chưa đăng nhập → chuyển sang trang login
  */
 async function toggleWishlist(btn, productId) {
     if (!IS_LOGGED_IN) {
-        window.location.href = '<?= BASE_URL ?>/login?redirect=' + encodeURIComponent(window.location.href);
+        window.location.href = '/login?redirect=' + encodeURIComponent(window.location.href);
         return;
     }
 
-    btn.disabled = true;
+    btn.disabled = true; // chống double-click
 
     try {
         const formData = new FormData();
         formData.append('product_id', productId);
 
-        const res = await fetch('<?= BASE_URL ?>/ajax/wishlist/toggle', {
-            method: 'POST',
-            body: formData,
-        });
+       const res = await fetch('<?= BASE_URL ?>/ajax/wishlist/toggle', {
+    method: 'POST',
+    body: formData,
+});
         const data = await res.json();
 
         if (data.success) {
@@ -509,6 +608,60 @@ function showToast(message, type = 'success') {
     const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
     toast.show();
 }
+
+/* ---------- Add To Cart (AJAX) - Đã Fix Triệt Để ---------- */
+async function addToCart(productId, quantity = 1) {
+    try {
+        const pId = parseInt(productId) || 0;
+        const qty = parseInt(quantity) || 1;
+
+        if (pId <= 0) {
+            alert("Lỗi: Không lấy được ID sản phẩm.");
+            return;
+        }
+
+        // LỚP BẢO VỆ 1: Loại bỏ dấu gạch chéo thừa ở BASE_URL để chống Redirect 301 làm rớt POST
+        let baseUrl = '<?= BASE_URL ?>'.replace(/\/+$/, '');
+        let url = baseUrl + '/cart/add';
+
+        // LỚP BẢO VỆ 2: Đóng gói chuẩn JSON để không bị giới hạn bởi Server
+        const res = await fetch(url, { 
+            method: 'POST', 
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                product_id: pId,
+                quantity: qty
+            })
+        });
+        
+        const data = await res.json();
+
+        if (data.success) {
+            // Thông báo thành công
+            if (typeof showToast === 'function') showToast(data.message, 'success');
+            else alert(data.message);
+            
+            // Cập nhật số lượng trên Navbar
+            const badge = document.getElementById('cartCountBadge');
+            if (badge) {
+                badge.textContent = data.cartCount;
+                badge.classList.remove('d-none');
+            }
+        } else {
+            // Thông báo lỗi từ PHP (VD: Hết hàng, Vượt tồn kho)
+            if (typeof showToast === 'function') showToast(data.message, 'danger');
+            else alert(data.message);
+        }
+    } catch (err) {
+        console.error("Lỗi quá trình Fetch:", err);
+        if (typeof showToast === 'function') showToast('Có lỗi xảy ra. Hãy tải lại trang!', 'danger');
+        else alert('Có lỗi xảy ra. Hãy tải lại trang!');
+    }
+}
+
 </script>
 </body>
 </html>

@@ -100,7 +100,7 @@ body{
 <div class="container-xl">
 
   <!-- Breadcrumb -->
-  <nav aria-label="breadcrumb" class="mb-4">
+<nav aria-label="breadcrumb" class="mb-4">
     <ol class="breadcrumb">
       <li class="breadcrumb-item">
         <a href="<?= BASE_URL ?>/">Trang chủ</a>
@@ -110,24 +110,18 @@ body{
   </nav>
 
   <div class="alert alert-primary border-0 shadow-sm mb-4">
-
     <div class="d-flex align-items-center">
-
         <i class="fa-solid fa-bolt fa-2x me-3"></i>
-
         <div>
-
             <strong>Mua sắm an toàn tại TechGalaxy</strong>
-
             <div class="small">
                 Miễn phí vận chuyển cho đơn từ 500.000₫
             </div>
-
         </div>
-
     </div>
-
   </div>
+
+  <h2 class="mb-4">
     <i class="fa-solid fa-cart-shopping me-2 text-primary"></i>
     Giỏ hàng
     <?php if (!empty($items)): 
@@ -140,7 +134,6 @@ body{
   </h2>
 
   <?php if (empty($items)): ?>
-  <!-- ═══════════════ GIỎ TRỐNG ═══════════════ -->
   <div class="text-center py-5">
     <div class="mb-4">
     <i class="fa-solid fa-cart-shopping" style="font-size:100px; color:#d0d7de;"></i>

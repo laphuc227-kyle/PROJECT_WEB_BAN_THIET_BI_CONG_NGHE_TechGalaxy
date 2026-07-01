@@ -2,6 +2,21 @@
 // File: controllers/CartController.php
 declare(strict_types=1);
 
+namespace Controllers;
+
+// 1. NẠP TRỰC TIẾP CÁC FILE MODEL (Khắc phục triệt để lỗi Class not found)
+require_once __DIR__ . '/../models/BaseModel.php';
+require_once __DIR__ . '/../models/Product.php';
+require_once __DIR__ . '/../models/Cart.php';
+require_once __DIR__ . '/../models/CartItem.php';
+require_once __DIR__ . '/../models/Coupon.php';
+
+// 2. KHAI BÁO SỬ DỤNG
+use Models\Cart;
+use Models\CartItem;
+use Models\Product;
+use Models\Coupon;
+
 class CartController
 {
     private Cart $cartModel;
@@ -23,8 +38,8 @@ class CartController
     // ----------------------------------------------------------
     private function getUserId(): ?int
     {
-        return isset($_SESSION['user']['id'])
-            ? (int) $_SESSION['user']['id']
+        return isset($_SESSION['user_id']['id'])
+            ? (int) $_SESSION['user_id']['id']
             : null;
     }
 
@@ -85,8 +100,9 @@ class CartController
     // ----------------------------------------------------------
     public function addToCart(): void
     {
-        $productId = (int) ($_POST['product_id'] ?? 0);
-        $quantity  = (int) ($_POST['quantity']   ?? 1);
+        $raw = json_decode(file_get_contents('php://input'), true) ?: [];
+        $productId = (int) ($_POST['product_id'] ?? $raw['product_id'] ?? 0);
+        $quantity  = (int) ($_POST['quantity']   ?? $raw['quantity']   ?? 1);
 
         // Validate input
         if ($productId <= 0 || $quantity <= 0) {
@@ -344,5 +360,38 @@ class CartController
         $count     = $this->cartModel->countItems((int) $cart['id']);
 
         $this->json(['cartCount' => $count]);
+    }
+}
+
+// =========================================================
+// KHỞI TẠO VÀ ĐIỀU HƯỚNG (ROUTER) DÀNH CHO GIỎ HÀNG
+// =========================================================
+$cartController = new CartController();
+
+$basePath = parse_url(BASE_URL ?? '', PHP_URL_PATH) ?: '';
+$uri      = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+$path     = trim((string) preg_replace('#^' . preg_quote($basePath, '#') . '#', '', $uri), '/');
+
+// Điều hướng dựa trên URL hiện tại
+if ($path === 'cart') {
+    $cartController->showCart();
+} elseif ($path === 'cart/add') {
+    $cartController->addToCart();
+} elseif ($path === 'cart/update') {
+    $cartController->updateCart();
+} elseif ($path === 'cart/remove') {
+    $cartController->removeFromCart();
+} elseif ($path === 'cart/clear') {
+    $cartController->clearCart();
+} elseif ($path === 'cart/coupon') {
+    $cartController->applyCoupon();
+} elseif ($path === 'cart/count') {
+    $cartController->getCartCount();
+} elseif ($path === 'checkout') {
+    // Tạm thời để trống chờ code trang Checkout của nhóm
+    if (method_exists($cartController, 'showCheckout')) {
+        $cartController->showCheckout();
+    } else {
+        echo "<h1>Trang thanh toán đang được xây dựng!</h1>";
     }
 }

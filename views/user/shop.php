@@ -1,4 +1,81 @@
 <?php
+// ===== LẤY DỮ LIỆU SẢN PHẨM & DANH MỤC =====
+require_once __DIR__ . '/../../models/Post.php'; // đã có BaseModel
+require_once __DIR__ . '/../../config/database.php';
+
+global $pdo;
+
+// Lấy tham số từ URL
+$currentPage       = max(1, (int) ($_GET['page'] ?? 1));
+$searchKeyword     = trim($_GET['q'] ?? '');
+$selectedCategory  = $_GET['category'] ?? ''; // có thể là slug hoặc id
+$perPage           = 12;
+$offset            = ($currentPage - 1) * $perPage;
+
+// Xây dựng điều kiện WHERE động
+$where  = "p.deleted_at IS NULL AND p.status = 'active'";
+$params = [];
+
+if ($searchKeyword !== '') {
+    $where   .= " AND (p.name LIKE ? OR p.description LIKE ?)";
+    $params[] = "%{$searchKeyword}%";
+    $params[] = "%{$searchKeyword}%";
+}
+
+if ($selectedCategory !== '') {
+    // Hỗ trợ cả slug (vd: "laptop") lẫn id (vd: "2")
+    if (is_numeric($selectedCategory)) {
+        $where   .= " AND p.category_id = ?";
+        $params[] = (int) $selectedCategory;
+    } else {
+        $where   .= " AND c.slug = ?";
+        $params[] = $selectedCategory;
+    }
+}
+
+// Đếm tổng sản phẩm
+$countStmt = $pdo->prepare(
+    "SELECT COUNT(*) FROM products p
+     LEFT JOIN categories c ON c.id = p.category_id
+     WHERE {$where}"
+);
+$countStmt->execute($params);
+$totalProducts = (int) $countStmt->fetchColumn();
+$totalPages    = (int) ceil($totalProducts / $perPage);
+
+// Lấy danh sách sản phẩm theo trang
+$productParams   = array_merge($params, [$perPage, $offset]);
+$productStmt     = $pdo->prepare(
+    "SELECT p.*, c.name AS category_name, c.slug AS category_slug,
+            (SELECT pi.image_path FROM product_images pi
+             WHERE pi.product_id = p.id AND pi.is_primary = 1
+             LIMIT 1) AS primary_image
+     FROM products p
+     LEFT JOIN categories c ON c.id = p.category_id
+     WHERE {$where}
+     ORDER BY p.created_at DESC
+     LIMIT ? OFFSET ?"
+);
+// Bind LIMIT và OFFSET riêng vì cần PARAM_INT
+foreach ($params as $i => $val) {
+    $productStmt->bindValue($i + 1, $val);
+}
+$productStmt->bindValue(count($params) + 1, $perPage, PDO::PARAM_INT);
+$productStmt->bindValue(count($params) + 2, $offset,  PDO::PARAM_INT);
+$productStmt->execute();
+$products = $productStmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Lấy danh mục cho sidebar
+$catStmt = $pdo->prepare(
+    "SELECT c.*, COUNT(p.id) AS product_count
+     FROM categories c
+     LEFT JOIN products p ON p.category_id = c.id
+         AND p.deleted_at IS NULL AND p.status = 'active'
+     GROUP BY c.id
+     ORDER BY c.name ASC"
+);
+$catStmt->execute();
+$categories = $catStmt->fetchAll(PDO::FETCH_ASSOC);
 /**
  * views/user/shop.php
  *
@@ -12,6 +89,7 @@
  *  - $selectedCategory int|null  ID danh mục đang lọc
  */
 
+
 // Helper: tạo URL query string giữ các tham số hiện tại, chỉ thay thế 1 tham số
 function buildQuery(array $override = []): string
 {
@@ -23,12 +101,6 @@ function buildQuery(array $override = []): string
     // Loại bỏ tham số rỗng
     $params = array_filter($params, fn($v) => $v !== '' && $v !== null);
     return '?' . http_build_query($params);
-}
-
-// Format giá tiền VNĐ
-function formatPrice(float $price): string
-{
-    return number_format($price, 0, ',', '.') . 'đ';
 }
 
 // Kiểm tra user đã đăng nhập

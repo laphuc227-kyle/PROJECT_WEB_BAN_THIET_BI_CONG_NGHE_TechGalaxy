@@ -25,15 +25,36 @@ $routes = [
     ''                      => __DIR__ . '/views/user/index.php',
     'index'                 => __DIR__ . '/views/user/index.php',
     'index.php'             => __DIR__ . '/views/user/index.php',
-    
-    // --- Xác thực (Login) ---
-    'login'                 => __DIR__ . '/views/auth/login.php',
 
-    // --- Phần Blog phía Người dùng ---
+    // --- Xác thực ---
+    'login'                 => __DIR__ . '/controllers/AuthController.php',
+    'register'              => __DIR__ . '/controllers/AuthController.php',
+    'logout'                => __DIR__ . '/controllers/AuthController.php',
+    'forgot-password'       => __DIR__ . '/controllers/AuthController.php',
+    'reset-password'        => __DIR__ . '/controllers/AuthController.php',
+
+    // --- Shop & Sản phẩm ---
+    'shop'                  => __DIR__ . '/views/user/shop.php',
+
+    // --- Giỏ hàng & Thanh toán ---
+    'cart'                  => __DIR__ . '/controllers/CartController.php',
+    'checkout'              => __DIR__ . '/controllers/CartController.php',
+    'order-complete'        => __DIR__ . '/views/user/order_complete.php',
+
+    // --- Tài khoản người dùng ---
+    'my-account'            => __DIR__ . '/views/user/my_account.php',
+    'my-orders'             => __DIR__ . '/views/user/my_orders.php',
+    'my-address'            => __DIR__ . '/views/user/my_address.php',
+    'wishlist'              => __DIR__ . '/controllers/WishlistController.php',
+
+    // --- Liên hệ ---
+    'contact'               => __DIR__ . '/controllers/ContactController.php',
+
+    // --- Blog ---
     'blog'                  => __DIR__ . '/views/user/blog.php',
     'blog/detail'           => __DIR__ . '/views/user/blog_detail.php',
 
-    // --- Khu vực Quản trị Admin Panel ---
+    // --- Admin ---
     'admin'                 => __DIR__ . '/controllers/DashboardController.php',
     'admin/coupons'         => __DIR__ . '/controllers/CouponController.php',
     'admin/coupons/create'  => __DIR__ . '/views/admin/coupons/create.php',
@@ -42,11 +63,17 @@ $routes = [
     'admin/reports'         => __DIR__ . '/controllers/ReportController.php',
     'admin/reports/export'  => __DIR__ . '/controllers/ReportController.php',
     'admin/settings'        => __DIR__ . '/controllers/SettingController.php',
-    'admin/orders'               => __DIR__ . '/controllers/OrderController.php',
-    'admin/orders/(?P<id>\d+)'   => __DIR__ . '/controllers/OrderController.php',
-    'admin/orders/(?P<id>\d+)/status' => __DIR__ . '/controllers/OrderController.php',
-    'admin/products' => __DIR__ . '/controllers/ProductController.php',
-	'admin/customers' => __DIR__ . '/controllers/CustomerController.php',
+    'admin/orders'          => __DIR__ . '/controllers/OrderController.php',
+    'admin/products'        => __DIR__ . '/controllers/ProductController.php',
+    'admin/customers'       => __DIR__ . '/controllers/CustomerController.php',
+    // --- Tài khoản người dùng ---
+'account'                    => __DIR__ . '/controllers/AuthController.php',
+'account/addresses'          => __DIR__ . '/controllers/AuthController.php',
+'account/addresses/add'      => __DIR__ . '/controllers/AuthController.php',
+'account/addresses/edit'     => __DIR__ . '/controllers/AuthController.php',
+'account/addresses/delete'   => __DIR__ . '/controllers/AuthController.php',
+'account/addresses/default'  => __DIR__ . '/controllers/AuthController.php',
+'account/change-password'    => __DIR__ . '/controllers/AuthController.php',
 ];
 
 // Nếu tìm thấy đường dẫn trong mảng, gọi file giao diện tương ứng
@@ -57,21 +84,40 @@ if (isset($routes[$path])) {
 
 // 2. Xử lý các đường dẫn động (chứa ID phía sau) bằng strpos
 // (strpos kiểm tra xem đường dẫn có BẮT ĐẦU bằng cụm từ đó không)
+// --- Các route động còn thiếu ---
 if (strpos($path, 'admin/orders') === 0) {
-    require __DIR__ . '/controllers/OrderController.php';
-    exit;
+    require __DIR__ . '/controllers/OrderController.php'; exit;
 }
 if (strpos($path, 'admin/products') === 0) {
-    require __DIR__ . '/controllers/ProductController.php';
-    exit;
+    require __DIR__ . '/controllers/ProductController.php'; exit;
 }
 if (strpos($path, 'admin/customers') === 0) {
-    require __DIR__ . '/controllers/CustomerController.php';
-    exit;
+    require __DIR__ . '/controllers/CustomerController.php'; exit;
 }
 if (strpos($path, 'admin/posts') === 0) {
-    require __DIR__ . '/controllers/PostController.php';
-    exit;
+    require __DIR__ . '/controllers/PostController.php'; exit;
+}
+
+
+// --- Route động: Chi tiết sản phẩm (/shop/{slug} hoặc /product/{id}) ---
+if (preg_match('@^shop/([a-z0-9\-]+)$@', $path) ||
+    preg_match('@^product/(\d+)$@', $path)) {
+    require __DIR__ . '/views/user/product_detail.php'; exit;
+}
+
+// --- Route động: Auth (reset password với token) ---
+if (strpos($path, 'reset-password') === 0) {
+    require __DIR__ . '/controllers/AuthController.php'; exit;
+}
+
+// --- Route động: Cart actions ---
+if (strpos($path, 'cart') === 0) {
+    require __DIR__ . '/controllers/CartController.php'; exit;
+}
+
+// --- Route động: Wishlist actions ---
+if (strpos($path, 'wishlist') === 0) {
+    require __DIR__ . '/controllers/WishlistController.php'; exit;
 }
 // ===== Xử lý Bình luận (Admin: Duyệt / Ẩn / Xóa) =====
 if ($_SERVER['REQUEST_METHOD'] === 'POST' &&
@@ -105,6 +151,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' &&
     }
 
     header('Location: ' . $redirect);
+    exit;
+}
+if (strpos($path, 'account') === 0) {
+    require __DIR__ . '/controllers/AuthController.php';
     exit;
 }
 // ===== Route động: Chi tiết bài viết Blog (/blog/{slug}) =====

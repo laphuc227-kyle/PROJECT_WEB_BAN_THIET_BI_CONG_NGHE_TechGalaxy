@@ -1,19 +1,79 @@
 <?php
-/**
- * views/user/product_detail.php
- *
- * Biến được truyền từ ProductController::productDetail():
- *  - $product          array   Thông tin sản phẩm
- *  - $images           array   Gallery ảnh (is_primary = 1 đứng đầu)
- *  - $isWishlisted     bool    Đã thêm vào wishlist hay chưa
- *  - $wishlistId       int|null  ID trong bảng wishlists (nếu có)
- *  - $relatedProducts  array   Sản phẩm liên quan
- */
+// ===== LẤY DỮ LIỆU SẢN PHẨM CHI TIẾT =====
+global $pdo;
 
-function formatPrice(float $price): string
-{
-    return number_format($price, 0, ',', '.') . 'đ';
+// Lấy ID từ URL: /product/3
+$productId = (int) (explode('/', trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/product/'))[0] ?? 0);
+
+// Cách lấy ID chuẩn hơn — parse từ path
+$uriPath   = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$basePath  = parse_url(BASE_URL, PHP_URL_PATH) ?: '';
+$cleanPath = trim(str_replace($basePath, '', $uriPath), '/');
+// cleanPath lúc này là "product/3"
+preg_match('@^product/(\d+)$@', $cleanPath, $idMatch);
+$productId = (int) ($idMatch[1] ?? 0);
+
+if ($productId <= 0) {
+    http_response_code(404);
+    exit('Sản phẩm không tồn tại.');
 }
+
+// Lấy thông tin sản phẩm
+$stmt = $pdo->prepare(
+    "SELECT p.*, c.name AS category_name, c.id AS category_id
+     FROM products p
+     LEFT JOIN categories c ON c.id = p.category_id
+     WHERE p.id = ? AND p.deleted_at IS NULL AND p.status = 'active'
+     LIMIT 1"
+);
+$stmt->execute([$productId]);
+$product = $stmt->fetch(PDO::FETCH_ASSOC);
+
+if (!$product) {
+    http_response_code(404);
+    exit('Sản phẩm không tồn tại hoặc đã bị ẩn.');
+}
+
+// Lấy gallery ảnh (ảnh primary đứng đầu)
+$imgStmt = $pdo->prepare(
+    "SELECT * FROM product_images
+     WHERE product_id = ?
+     ORDER BY is_primary DESC, id ASC"
+);
+$imgStmt->execute([$productId]);
+$images = $imgStmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Kiểm tra wishlist (nếu đã đăng nhập)
+$isWishlisted = false;
+$wishlistId   = null;
+if (!empty($_SESSION['user_id'])) {
+    $wStmt = $pdo->prepare(
+        "SELECT id FROM wishlists
+         WHERE user_id = ? AND product_id = ? LIMIT 1"
+    );
+    $wStmt->execute([$_SESSION['user_id'], $productId]);
+    $wRow = $wStmt->fetch(PDO::FETCH_ASSOC);
+    if ($wRow) {
+        $isWishlisted = true;
+        $wishlistId   = (int) $wRow['id'];
+    }
+}
+
+// Lấy sản phẩm liên quan (cùng danh mục, loại trừ sản phẩm hiện tại)
+$relStmt = $pdo->prepare(
+    "SELECT p.*,
+            (SELECT pi.image_path FROM product_images pi
+             WHERE pi.product_id = p.id AND pi.is_primary = 1
+             LIMIT 1) AS primary_image
+     FROM products p
+     WHERE p.category_id = ? AND p.id != ?
+       AND p.deleted_at IS NULL AND p.status = 'active'
+     ORDER BY RAND()
+     LIMIT 8"
+);
+$relStmt->execute([$product['category_id'], $productId]);
+$relatedProducts = $relStmt->fetchAll(PDO::FETCH_ASSOC);
+
 
 $hasSale      = !empty($product['sale_price']) && (float)$product['sale_price'] < (float)$product['price'];
 $displayPrice = $hasSale ? $product['sale_price'] : $product['price'];

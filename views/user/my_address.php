@@ -121,20 +121,20 @@ $currentPage = 'addresses';
             <label for="addPhone" class="form-label small fw-medium text-secondary">Số điện thoại <span class="text-danger">*</span></label>
             <input type="tel" class="form-control border-light" id="addPhone" name="phone" required style="border-radius: 8px;">
           </div>
-          <div class="row g-2 mb-3">
-            <div class="col-4">
-              <label for="addProvince" class="form-label small fw-medium text-secondary">Tỉnh / Thành <span class="text-danger">*</span></label>
-              <input type="text" class="form-control border-light" id="addProvince" name="province" required style="border-radius: 8px;">
-            </div>
-            <div class="col-4">
-              <label for="addDistrict" class="form-label small fw-medium text-secondary">Quận / Huyện <span class="text-danger">*</span></label>
-              <input type="text" class="form-control border-light" id="addDistrict" name="district" required style="border-radius: 8px;">
-            </div>
-            <div class="col-4">
-              <label for="addWard" class="form-label small fw-medium text-secondary">Phường / Xã <span class="text-danger">*</span></label>
-              <input type="text" class="form-control border-light" id="addWard" name="ward" required style="border-radius: 8px;">
-            </div>
-          </div>
+          <div class="row mb-3">
+    <div class="col-md-4">
+        <label class="form-label">Tỉnh / Thành <span class="text-danger">*</span></label>
+        <select name="province" id="province" class="form-select" required>
+            <option value="" disabled selected>Chọn Tỉnh/Thành</option>
+        </select>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">Phường / Xã <span class="text-danger">*</span></label>
+        <select name="ward" id="ward" class="form-select" required>
+            <option value="" disabled selected>Chọn Phường/Xã</option>
+        </select>
+    </div>
+</div>
           <div class="mb-3">
             <label for="addDetail" class="form-label small fw-medium text-secondary">Địa chỉ chi tiết (Số nhà, Tên đường) <span class="text-danger">*</span></label>
             <input type="text" class="form-control border-light" id="addDetail" name="detail" required style="border-radius: 8px;">
@@ -172,20 +172,21 @@ $currentPage = 'addresses';
             <label for="editPhone" class="form-label small fw-medium text-secondary">Số điện thoại <span class="text-danger">*</span></label>
             <input type="tel" class="form-control border-light" id="editPhone" name="phone" required style="border-radius: 8px;">
           </div>
-          <div class="row g-2 mb-3">
-            <div class="col-4">
-              <label for="editProvince" class="form-label small fw-medium text-secondary">Tỉnh / Thành <span class="text-danger">*</span></label>
-              <input type="text" class="form-control border-light" id="editProvince" name="province" required style="border-radius: 8px;">
-            </div>
-            <div class="col-4">
-              <label for="editDistrict" class="form-label small fw-medium text-secondary">Quận / Huyện <span class="text-danger">*</span></label>
-              <input type="text" class="form-control border-light" id="editDistrict" name="district" required style="border-radius: 8px;">
-            </div>
-            <div class="col-4">
-              <label for="editWard" class="form-label small fw-medium text-secondary">Phường / Xã <span class="text-danger">*</span></label>
-              <input type="text" class="form-control border-light" id="editWard" name="ward" required style="border-radius: 8px;">
-            </div>
-          </div>
+          <div class="row mb-3">
+    <div class="col-md-6">
+        <label class="form-label">Tỉnh / Thành <span class="text-danger">*</span></label>
+        <select name="province" id="province" class="form-select" required>
+            <option value="" disabled selected>Chọn Tỉnh/Thành</option>
+        </select>
+    </div>
+
+    <div class="col-md-6">
+        <label class="form-label">Phường / Xã <span class="text-danger">*</span></label>
+        <select name="ward" id="ward" class="form-select" required>
+            <option value="" disabled selected>Chọn Phường/Xã</option>
+        </select>
+    </div>
+</div>
           <div class="mb-3">
             <label for="editDetail" class="form-label small fw-medium text-secondary">Địa chỉ chi tiết (Số nhà, Tên đường) <span class="text-danger">*</span></label>
             <input type="text" class="form-control border-light" id="editDetail" name="detail" required style="border-radius: 8px;">
@@ -203,6 +204,48 @@ $currentPage = 'addresses';
     </div>
   </div>
 </div>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Gọi thẳng bản v2
+    const host = "https://provinces.open-api.vn/api/v2/";
+    const provinceSelect = document.getElementById('province');
+    const wardSelect = document.getElementById('ward');
+
+    // 1. Lấy danh sách Tỉnh/Thành
+    fetch(host + "?depth=1")
+        .then(response => response.json())
+        .then(data => {
+            let html = '<option value="" disabled selected>Chọn Tỉnh/Thành</option>';
+            data.forEach(item => {
+                html += `<option value="${item.name}" data-code="${item.code}">${item.name}</option>`;
+            });
+            provinceSelect.innerHTML = html;
+        });
+
+    // 2. Khi chọn Tỉnh/Thành -> Lấy thẳng Phường/Xã
+    provinceSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const provinceCode = selectedOption.getAttribute('data-code');
+        
+        wardSelect.innerHTML = '<option value="" disabled selected>Chọn Phường/Xã</option>';
+        
+        if (provinceCode) {
+            // Lấy thẳng Phường/Xã (depth=2 trong v2 sẽ trả về trực tiếp wards)
+            fetch(host + "p/" + provinceCode + "?depth=2")
+                .then(response => response.json())
+                .then(data => {
+                    let html = '<option value="" disabled selected>Chọn Phường/Xã</option>';
+                    if(data.wards) {
+                        data.wards.forEach(item => {
+                            html += `<option value="${item.name}" data-code="${item.code}">${item.name}</option>`;
+                        });
+                    }
+                    wardSelect.innerHTML = html;
+                });
+        }
+    });
+});
+</script>
 <?php 
 // Inject script dynamic to handle modal binding
 $extraJS = '
@@ -239,7 +282,9 @@ async function confirmDeleteAddress(form) {
     form.submit();
   }
 }
+  
 </script>
 ';
+
 require_once __DIR__ . '/../../includes/footer.php'; 
 ?>

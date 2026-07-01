@@ -611,4 +611,77 @@ class AuthController {
             redirect('/reset_password.php');
         }
     }
+// ← đóng hàm resetPassword()
+}
+// ← đóng class AuthController
+
+// ===== ROUTING =====
+if (!function_exists('redirectIfAuthenticated')) {
+    function redirectIfAuthenticated(): void {
+        if (!empty($_SESSION['user_id'])) {
+            header('Location: ' . BASE_URL . '/');
+            exit;
+        }
+    }
+}
+if (!function_exists('requireLogin')) {
+    function requireLogin(): void {
+        if (empty($_SESSION['user_id'])) {
+            header('Location: ' . BASE_URL . '/login');
+            exit;
+        }
+    }
+}
+
+$authCtrl = new AuthController();
+
+$uri      = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$basePath = parse_url(BASE_URL, PHP_URL_PATH) ?: '';
+$authPath = trim(str_replace($basePath, '', $uri), '/');
+$method   = $_SERVER['REQUEST_METHOD'];
+
+if ($authPath === 'login') {
+    $method === 'POST' ? $authCtrl->login() : $authCtrl->showLogin();
+
+} elseif ($authPath === 'register') {
+    $method === 'POST' ? $authCtrl->register() : $authCtrl->showRegister();
+
+} elseif ($authPath === 'logout') {
+    $authCtrl->logout();
+
+} elseif ($authPath === 'forgot-password') {
+    $method === 'POST' ? $authCtrl->forgotPassword() : $authCtrl->showForgotPassword();
+
+} elseif ($authPath === 'reset-password') {
+    $method === 'POST' ? $authCtrl->resetPassword() : $authCtrl->showResetPassword();
+} elseif ($authPath === 'account') {
+    // Sửa updateProfile thành updateAccount
+    $method === 'POST' ? $authCtrl->updateAccount() : $authCtrl->showMyAccount();
+
+} elseif ($authPath === 'account/addresses') {
+    // Sửa showMyAddress thành showAddresses
+    $authCtrl->showAddresses();
+
+} elseif ($authPath === 'account/addresses/add') {
+    // Sửa addAddress thành createAddress
+    $authCtrl->createAddress();
+
+} elseif ($authPath === 'account/addresses/edit') {
+    $authCtrl->updateAddress();
+
+} elseif ($authPath === 'account/addresses/delete') {
+    $authCtrl->deleteAddress();
+
+} elseif ($authPath === 'account/addresses/default') {
+    $authCtrl->setDefaultAddress();
+
+} elseif ($authPath === 'account/change-password') {
+    // Sửa changePassword thành updatePassword. 
+    // Vì không có hàm showChangePassword (dùng chung giao diện account), ta redirect về tab password nếu người dùng vào bằng GET
+    if ($method === 'POST') {
+        $authCtrl->updatePassword();
+    } else {
+        header('Location: ' . BASE_URL . '/account?tab=password');
+        exit;
+    }
 }

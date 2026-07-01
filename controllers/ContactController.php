@@ -89,3 +89,11 @@ class ContactController {
         redirect('/contact');
     }
 }
+// ===== ROUTING =====
+$contactCtrl = new ContactController();
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $contactCtrl->submitContact();
+} else {
+    $contactCtrl->showContact();
+}

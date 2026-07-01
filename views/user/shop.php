@@ -13,13 +13,15 @@ $perPage           = 12;
 $offset            = ($currentPage - 1) * $perPage;
 
 // Xây dựng điều kiện WHERE động
-$where  = "p.deleted_at IS NULL AND p.status = 'active'";
+$where  = "p.deleted_at IS NULL AND p.status = 1";
 $params = [];
 
 if ($searchKeyword !== '') {
-    $where   .= " AND (p.name LIKE ? OR p.description LIKE ?)";
-    $params[] = "%{$searchKeyword}%";
-    $params[] = "%{$searchKeyword}%";
+    // Tìm kiếm theo: Tên sản phẩm HOẶC Mô tả sản phẩm HOẶC Tên danh mục
+    $where   .= " AND (p.name LIKE ? OR p.description LIKE ? OR c.name LIKE ?)";
+    $params[] = "%{$searchKeyword}%"; 
+    $params[] = "%{$searchKeyword}%"; 
+    $params[] = "%{$searchKeyword}%"; 
 }
 
 if ($selectedCategory !== '') {
@@ -70,7 +72,7 @@ $catStmt = $pdo->prepare(
     "SELECT c.*, COUNT(p.id) AS product_count
      FROM categories c
      LEFT JOIN products p ON p.category_id = c.id
-         AND p.deleted_at IS NULL AND p.status = 'active'
+         AND p.deleted_at IS NULL AND p.status = 1
      GROUP BY c.id
      ORDER BY c.name ASC"
 );
@@ -431,8 +433,7 @@ $isLoggedIn = !empty($_SESSION['user_id']);
                         $hasSale    = !empty($p['sale_price']) && $p['sale_price'] < $p['price'];
                         $displayPrice = $hasSale ? $p['sale_price'] : $p['price'];
                         $inStock    = (int)($p['stock'] ?? 0) > 0;
-                        $imgSrc     = !empty($p['primary_image']) ? '/' . $p['primary_image'] : '/public/assets/img/no-image.png';
-                        ?>
+                        $imgSrc = !empty($p['primary_image']) ? BASE_URL . '/' . ltrim($p['primary_image'], '/') : BASE_URL . '/public/assets/img/no-image.png';                        ?>
                         <div class="col">
                             <div class="product-card">
                                 <!-- Ảnh -->

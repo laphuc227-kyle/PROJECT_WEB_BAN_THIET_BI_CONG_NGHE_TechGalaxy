@@ -23,7 +23,7 @@ $stmt = $pdo->prepare(
     "SELECT p.*, c.name AS category_name, c.id AS category_id
      FROM products p
      LEFT JOIN categories c ON c.id = p.category_id
-     WHERE p.id = ? AND p.deleted_at IS NULL AND p.status = 'active'
+     WHERE p.id = ? AND p.deleted_at IS NULL AND p.status = 1
      LIMIT 1"
 );
 $stmt->execute([$productId]);
@@ -67,7 +67,7 @@ $relStmt = $pdo->prepare(
              LIMIT 1) AS primary_image
      FROM products p
      WHERE p.category_id = ? AND p.id != ?
-       AND p.deleted_at IS NULL AND p.status = 'active'
+       AND p.deleted_at IS NULL AND p.status = 1
      ORDER BY RAND()
      LIMIT 8"
 );
@@ -81,8 +81,7 @@ $inStock      = (int)($product['stock'] ?? 0) > 0;
 $isLoggedIn   = !empty($_SESSION['user_id']);
 
 // Ảnh chính (primary hoặc ảnh đầu tiên trong danh sách)
-$mainImage    = !empty($images[0]['image_path']) ? '/' . $images[0]['image_path'] : '/public/assets/img/no-image.png';
-?>
+$mainImage = !empty($images[0]['image_path']) ? BASE_URL . '/' . ltrim($images[0]['image_path'], '/') : BASE_URL . '/public/assets/img/no-image.png';?>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -333,7 +332,7 @@ $mainImage    = !empty($images[0]['image_path']) ? '/' . $images[0]['image_path'
                     <?php foreach ($images as $i => $img): ?>
                         <div class="thumb-item <?= $i === 0 ? 'active' : '' ?>"
                              onclick="switchImage(this, '<?= htmlspecialchars('/' . $img['image_path']) ?>')">
-                            <img src="<?= htmlspecialchars('/' . $img['image_path']) ?>"
+                            <img src="<?= BASE_URL . '/' . ltrim($img['image_path'], '/') ?>" 
                                  alt="Ảnh <?= $i + 1 ?>"
                                  loading="lazy">
                         </div>

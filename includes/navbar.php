@@ -73,14 +73,14 @@ $user          = $_SESSION['user'] ?? null;
                 <!-- TODO (Nguyên): Load danh mục thật từ DB -->
                 <?php
                 $demoCategories = [
-                    ['icon' => 'fa-mobile-screen',   'name' => 'Điện thoại',    'slug' => 'dien-thoai'],
-                    ['icon' => 'fa-laptop',           'name' => 'Laptop',        'slug' => 'laptop'],
-                    ['icon' => 'fa-headphones',       'name' => 'Tai nghe',      'slug' => 'tai-nghe'],
-                    ['icon' => 'fa-watch',            'name' => 'Đồng hồ thông minh', 'slug' => 'dong-ho'],
-                    ['icon' => 'fa-tablet-screen-button', 'name' => 'Máy tính bảng', 'slug' => 'may-tinh-bang'],
-                    ['icon' => 'fa-keyboard',         'name' => 'Phụ kiện',      'slug' => 'phu-kien'],
-                ];
-                foreach ($demoCategories as $cat): ?>
+    ['icon' => 'fa-mobile-screen',       'name' => 'Apple (iPhone)',  'slug' => '5'],
+    ['icon' => 'fa-laptop',              'name' => 'Asus (Laptop)',   'slug' => '9'],
+    ['icon' => 'fa-headphones',          'name' => 'Tai nghe',        'slug' => '10'],
+    ['icon' => 'fa-watch',               'name' => 'Smartwatch',      'slug' => '4'],
+    ['icon' => 'fa-mobile-screen',       'name' => 'Samsung',         'slug' => '6'],
+    ['icon' => 'fa-laptop',              'name' => 'MacBook',         'slug' => '8'],
+];
+foreach ($demoCategories as $cat): ?>
                   <a href="<?= BASE_URL ?>/shop?category=<?= $cat['slug'] ?>" class="mega-menu__item">
                     <span class="mega-menu__icon"><i class="fa-solid <?= $cat['icon'] ?>"></i></span>
                     <span><?= $cat['name'] ?></span>

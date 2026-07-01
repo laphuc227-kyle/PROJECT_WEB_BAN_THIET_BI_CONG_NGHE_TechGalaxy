@@ -1,7 +1,35 @@
 <?php
+global $pdo;
+
+// Lấy 4 sản phẩm nổi bật (is_featured = 1, status = 1, chưa bị xóa)
+$featStmt = $pdo->prepare(
+    "SELECT p.*, c.name AS category_name,
+            (SELECT pi.image_path FROM product_images pi 
+             WHERE pi.product_id = p.id AND pi.is_primary = 1 LIMIT 1) AS primary_image
+     FROM products p
+     LEFT JOIN categories c ON c.id = p.category_id
+     WHERE p.deleted_at IS NULL AND p.status = 1 AND p.is_featured = 1
+     ORDER BY p.created_at DESC
+     LIMIT 4"
+);
+$featStmt->execute();
+$featuredProducts = $featStmt->fetchAll(PDO::FETCH_ASSOC);
 if (!defined('BASE_URL')) {
     require_once __DIR__ . '/../../config/app.php';
 }
+// Lấy 8 sản phẩm MỚI NHẤT (dựa vào created_at)
+$latestStmt = $pdo->prepare(
+    "SELECT p.*, c.name AS category_name,
+            (SELECT pi.image_path FROM product_images pi 
+             WHERE pi.product_id = p.id AND pi.is_primary = 1 LIMIT 1) AS primary_image
+     FROM products p
+     LEFT JOIN categories c ON c.id = p.category_id
+     WHERE p.deleted_at IS NULL AND p.status = 1
+     ORDER BY p.created_at DESC
+     LIMIT 8"
+);
+$latestStmt->execute();
+$latestProducts = $latestStmt->fetchAll(PDO::FETCH_ASSOC);
 
 
 $pageTitle = 'Trang chủ';
@@ -33,8 +61,8 @@ $heroSlides = [
         'title'    => "Laptop gaming\nhiệu suất vượt trội",
         'highlight'=> 'vượt trội',
         'subtitle' => 'Dòng laptop gaming mới nhất với GPU thế hệ mới, màn hình 165Hz, pin trâu 72Wh.',
-        'cta'      => ['text' => 'Xem ngay', 'href' => BASE_URL . '/shop?category=laptop'],
-        'cta2'     => ['text' => 'So sánh', 'href' => BASE_URL . '/shop?category=laptop&sort=featured'],
+        'cta'      => ['text' => 'Xem ngay', 'href' => BASE_URL . '/shop?category=9'],
+        'cta2'     => ['text' => 'So sánh', 'href' => BASE_URL . '/shop?category=9&sort=featured'],
         'image'    => $img . '/hero/laptop-hero.png',
         'stats'    => [
             ['number' => '500+', 'label' => 'Model laptop'],
@@ -44,25 +72,26 @@ $heroSlides = [
     ],
 ];
 
+// Danh sách các danh mục muốn hiển thị ra trang chủ (slug chính là ID thật)
 $categories = [
-    ['icon' => 'fa-mobile-screen',        'name' => 'Điện thoại',       'slug' => 'dien-thoai',      'count' => 248],
-    ['icon' => 'fa-laptop',               'name' => 'Laptop',            'slug' => 'laptop',           'count' => 156],
-    ['icon' => 'fa-headphones',           'name' => 'Tai nghe',          'slug' => 'tai-nghe',         'count' => 312],
-    ['icon' => 'fa-watch',                'name' => 'Smartwatch',        'slug' => 'smartwatch',       'count' => 89],
-    ['icon' => 'fa-tablet-screen-button', 'name' => 'Máy tính bảng',    'slug' => 'may-tinh-bang',    'count' => 67],
-    ['icon' => 'fa-keyboard',             'name' => 'Phụ kiện',          'slug' => 'phu-kien',         'count' => 520],
+    ['icon' => 'fa-mobile-screen',       'name' => 'Apple',        'slug' => '5'],
+    ['icon' => 'fa-laptop',              'name' => 'MacBook',      'slug' => '8'],
+    ['icon' => 'fa-headphones',          'name' => 'Tai nghe',     'slug' => '10'],
+    ['icon' => 'fa-watch',               'name' => 'Smartwatch',   'slug' => '4'],
+    ['icon' => 'fa-mobile-screen',       'name' => 'Samsung',      'slug' => '6'],
+    ['icon' => 'fa-keyboard',            'name' => 'Asus',         'slug' => '9'],
 ];
 
-$featuredProducts = [
-    ['id' => 1, 'name' => 'iPhone 15 Pro Max 256GB', 'slug' => 'iphone-15-pro-max', 'price' => 34990000, 'sale_price' => 29990000, 'image' => $img . '/products/product-1.jpg', 'category_name' => 'Điện thoại', 'is_new' => true, 'in_wishlist' => false],
-    ['id' => 2, 'name' => 'MacBook Air M3 15"', 'slug' => 'macbook-air-m3', 'price' => 28990000, 'sale_price' => null, 'image' => $img . '/products/product-2.jpg', 'category_name' => 'Laptop', 'is_new' => true, 'in_wishlist' => false],
-    ['id' => 3, 'name' => 'Sony WH-1000XM5', 'slug' => 'sony-wh-1000xm5', 'price' => 7490000, 'sale_price' => 6490000, 'image' => $img . '/products/product-3.jpg', 'category_name' => 'Tai nghe', 'is_new' => false, 'in_wishlist' => false],
-    ['id' => 4, 'name' => 'Samsung Galaxy Watch 6', 'slug' => 'galaxy-watch-6', 'price' => 6990000, 'sale_price' => null, 'image' => $img . '/products/product-4.jpg', 'category_name' => 'Smartwatch', 'is_new' => true, 'in_wishlist' => false],
-    ['id' => 5, 'name' => 'iPad Pro M4 11"', 'slug' => 'ipad-pro-m4', 'price' => 24990000, 'sale_price' => 22990000, 'image' => $img . '/products/product-5.jpg', 'category_name' => 'Máy tính bảng', 'is_new' => true, 'in_wishlist' => false],
-    ['id' => 6, 'name' => 'Logitech MX Master 3S', 'slug' => 'mx-master-3s', 'price' => 2490000, 'sale_price' => null, 'image' => $img . '/products/product-6.jpg', 'category_name' => 'Phụ kiện', 'is_new' => false, 'in_wishlist' => false],
-    ['id' => 7, 'name' => 'ASUS ROG Zephyrus G16', 'slug' => 'rog-zephyrus-g16', 'price' => 45990000, 'sale_price' => 41990000, 'image' => $img . '/products/product-7.jpg', 'category_name' => 'Laptop', 'is_new' => true, 'in_wishlist' => false],
-    ['id' => 8, 'name' => 'Galaxy Buds3 Pro', 'slug' => 'galaxy-buds3-pro', 'price' => 4990000, 'sale_price' => null, 'image' => $img . '/products/product-8.jpg', 'category_name' => 'Tai nghe', 'is_new' => true, 'in_wishlist' => false],
-];
+// Chạy vòng lặp để đếm số lượng sản phẩm THẬT từ Database cho từng danh mục
+foreach ($categories as &$cat) {
+    $countStmt = $pdo->prepare(
+        "SELECT COUNT(id) FROM products 
+         WHERE category_id = ? AND status = 1 AND deleted_at IS NULL"
+    );
+    $countStmt->execute([$cat['slug']]); // Truyền ID danh mục vào để đếm
+    $cat['count'] = $countStmt->fetchColumn(); // Gắn kết quả đếm được vào biến count
+}
+unset($cat); // Xóa tham chiếu sau khi vòng lặp kết thúc cho an toàn
 
 $latestProducts = [
     ['id' => 11, 'name' => 'Samsung Galaxy S24 Ultra', 'slug' => 'galaxy-s24-ultra', 'price' => 31990000, 'sale_price' => null, 'image' => $img . '/products/product-1.jpg', 'category_name' => 'Điện thoại', 'is_new' => true, 'in_wishlist' => false],
@@ -232,16 +261,41 @@ $brands = [
 
     <!-- Swiper carousel trên mobile, grid trên desktop -->
     <div class="swiper featured-swiper mt-4">
-      <div class="swiper-wrapper">
-        <?php foreach ($featuredProducts as $product): ?>
+  <div class="swiper-wrapper">
+    <?php foreach ($featuredProducts as $p): ?>
+        <?php
+        $hasSale = !empty($p['sale_price']) && $p['sale_price'] < $p['price'];
+        $displayPrice = $hasSale ? $p['sale_price'] : $p['price'];
+        $imgSrc = !empty($p['primary_image']) ? BASE_URL . '/' . ltrim($p['primary_image'], '/') : BASE_URL . '/public/assets/img/no-image.png';
+        ?>
         <div class="swiper-slide h-auto">
-          <?= renderProductCard($product) ?>
+            <div class="product-card">
+                <div class="product-card__img-wrap">
+                    <a href="<?= BASE_URL ?>/product/<?= $p['id'] ?>">
+                        <img src="<?= htmlspecialchars($imgSrc) ?>" alt="<?= htmlspecialchars($p['name']) ?>" class="img-fluid" style="width:100%; height:100%; object-fit:cover;">
+                    </a>
+                    <?php if ($hasSale): ?>
+                        <span class="product-card__badge" style="position:absolute; top:10px; left:10px; background:#ef4444; color:#fff; padding:2px 8px; border-radius:12px; font-size:0.75rem;">-<?= round((($p['price'] - $p['sale_price']) / $p['price']) * 100) ?>%</span>
+                    <?php endif; ?>
+                </div>
+                <div class="product-card__body" style="padding: 1rem;">
+                    <div class="product-card__category" style="font-size: 0.75rem; color: #2563eb; text-transform: uppercase; font-weight: 600;"><?= htmlspecialchars($p['category_name'] ?? 'Công nghệ') ?></div>
+                    <a href="<?= BASE_URL ?>/product/<?= $p['id'] ?>" class="text-decoration-none">
+                        <div class="product-card__name" style="color: #1e293b; font-weight: 600; font-size: 1rem; margin: 0.5rem 0;"><?= htmlspecialchars($p['name']) ?></div>
+                    </a>
+                    <div class="product-card__price">
+                        <span class="price-current" style="color: #2563eb; font-weight: 700; font-size: 1.1rem;"><?= formatPrice((float)$displayPrice) ?></span>
+                        <?php if ($hasSale): ?>
+                            <span class="price-original text-muted text-decoration-line-through ms-2" style="font-size: 0.85rem;"><?= formatPrice((float)$p['price']) ?></span>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
         </div>
-        <?php endforeach; ?>
-      </div>
-      <div class="swiper-pagination"></div>
-    </div>
+    <?php endforeach; ?>
   </div>
+  <div class="swiper-pagination"></div>
+</div>
 </section>
 
 <!-- ════════════════════════════════════════════════════════════════ -->
@@ -260,8 +314,8 @@ $brands = [
               iPhone 15 Series<br>Giảm đến <strong>5 triệu</strong>
             </h3>
             <p class="promo-banner__subtitle">Chỉ còn 12 giờ · Số lượng có hạn</p>
-            <a href="<?= BASE_URL ?>/shop?category=dien-thoai&sale=1"
-               class="btn-hero-primary promo-cta--md">
+            <a href="<?= BASE_URL ?>/shop?category=5&sale=1" 
+              class="btn-hero-primary promo-cta--md">
               Mua ngay <i class="fa-solid fa-arrow-right"></i>
             </a>
           </div>
@@ -275,18 +329,18 @@ $brands = [
         <div class="promo-banner promo-banner--dark promo-banner--compact">
           <div class="promo-banner__content">
             <span class="promo-tag">🎧 Mới</span>
-            <h3 class="promo-banner__title promo-banner__title--sm">Tai nghe Sony WH-1000XM5</h3>
-            <p class="promo-banner__subtitle promo-banner__subtitle--sm">Giảm 20% trong hôm nay</p>
-            <a href="<?= BASE_URL ?>/shop?category=tai-nghe" class="btn-hero-outline promo-cta--sm">Xem ngay</a>
+            <h3 class="promo-banner__title promo-banner__title--sm">AirPods Pro Gen 2</h3>
+            <p class="promo-banner__subtitle promo-banner__subtitle--sm">Chống ồn xuất sắc</p>
+            <a href="<?= BASE_URL ?>/shop?category=10" class="btn-hero-outline promo-cta--sm">Xem ngay</a>
           </div>
         </div>
 
         <div class="promo-banner promo-banner--teal promo-banner--compact">
           <div class="promo-banner__content">
             <span class="promo-tag">💻 Deal</span>
-            <h3 class="promo-banner__title promo-banner__title--sm">Laptop Gaming RTX 4060</h3>
-            <p class="promo-banner__subtitle promo-banner__subtitle--sm">Trả góp 0% lãi suất</p>
-            <a href="<?= BASE_URL ?>/shop?category=laptop" class="btn-hero-outline promo-cta--sm">Xem ngay</a>
+            <h3 class="promo-banner__title promo-banner__title--sm">Asus ROG Strix G15</h3>
+            <p class="promo-banner__subtitle promo-banner__subtitle--sm">Hiệu năng khủng</p>
+            <a href="<?= BASE_URL ?>/shop?category=9" class="btn-hero-outline promo-cta--sm">Xem ngay</a>
           </div>
         </div>
       </div>
@@ -311,12 +365,40 @@ $brands = [
     </div>
 
     <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4 mt-2">
-      <?php foreach ($latestProducts as $product): ?>
-      <div class="col">
-        <?= renderProductCard($product) ?>
+  <?php foreach ($latestProducts as $product): ?>
+    <?php
+    $hasSale = !empty($product['sale_price']) && $product['sale_price'] < $product['price'];
+    $displayPrice = $hasSale ? $product['sale_price'] : $product['price'];
+    $imgSrc = !empty($product['primary_image']) ? BASE_URL . '/' . ltrim($product['primary_image'], '/') : BASE_URL . '/public/assets/img/no-image.png';
+    ?>
+    <div class="col">
+      <div class="product-card">
+          <div class="product-card__img-wrap" style="position: relative;">
+              <a href="<?= BASE_URL ?>/product/<?= $product['id'] ?>">
+                  <img src="<?= htmlspecialchars($imgSrc) ?>" alt="<?= htmlspecialchars($product['name']) ?>" class="img-fluid" style="width: 100%; aspect-ratio: 1; object-fit: cover;">
+              </a>
+              <?php if ($hasSale): ?>
+                  <span class="product-card__badge" style="position: absolute; top: 10px; left: 10px; background: #ef4444; color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem;">-<?= round((($product['price'] - $product['sale_price']) / $product['price']) * 100) ?>%</span>
+              <?php endif; ?>
+          </div>
+          <div class="product-card__body" style="padding: 1rem;">
+              <div class="product-card__category" style="font-size: 0.75rem; color: #2563eb; text-transform: uppercase; font-weight: 600;"><?= htmlspecialchars($product['category_name'] ?? 'Công nghệ') ?></div>
+              <a href="<?= BASE_URL ?>/product/<?= $product['id'] ?>" class="text-decoration-none">
+                  <div class="product-card__name" style="color: #1e293b; font-weight: 600; font-size: 1rem; margin: 0.5rem 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                      <?= htmlspecialchars($product['name']) ?>
+                  </div>
+              </a>
+              <div class="product-card__price">
+                  <span class="price-current" style="color: #2563eb; font-weight: 700; font-size: 1.1rem;"><?= formatPrice((float)$displayPrice) ?></span>
+                  <?php if ($hasSale): ?>
+                      <span class="price-original text-muted text-decoration-line-through ms-2" style="font-size: 0.85rem;"><?= formatPrice((float)$product['price']) ?></span>
+                  <?php endif; ?>
+              </div>
+          </div>
       </div>
-      <?php endforeach; ?>
     </div>
+  <?php endforeach; ?>
+</div>
   </div>
 </section>
 

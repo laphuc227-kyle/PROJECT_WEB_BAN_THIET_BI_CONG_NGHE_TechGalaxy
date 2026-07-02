@@ -75,7 +75,7 @@ unset($_SESSION['old_contact']);
     <div class="col-12 col-lg-6">
       <div class="card border-0 shadow-sm p-2 h-100" style="border-radius: var(--radius); overflow: hidden;">
         <iframe 
-          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.669726978586!2d106.679683775838!3d10.76008085949575!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1m3!1d3919.669726978586!2d106.679683775838!3d10.76008085949575!2m2!1d106.6822587!2d10.7624128!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1svi!2s!5v1700000000000" 
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d31350.686530286115!2d106.6933980996944!3d10.823873628828915!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3175293dceb22197%3A0x755bb0f39a48d4a6!2zVHLGsOG7nW5nIMSQ4bqhaSBI4buNYyBHaWFvIFRow7RuZyBW4bqtbiBU4bqjaSBUaMOgbmggUGjhu5EgSOG7kyBDaMOtIE1pbmggLSBDxqEgc-G7nyAx!5e0!3m2!1svi!2s!4v1783007531513!5m2!1svi!2s" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"
           width="100%" 
           height="100%" 
           style="border:0; min-height: 350px; border-radius: calc(var(--radius) - 8px)" 

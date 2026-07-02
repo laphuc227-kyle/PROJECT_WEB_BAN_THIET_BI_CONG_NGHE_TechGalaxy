@@ -383,7 +383,7 @@ $mainImage = !empty($images[0]['image_path']) ? BASE_URL . '/' . ltrim($images[0
                 <!-- Mô tả ngắn -->
                 <?php if (!empty($product['description'])): ?>
                     <div class="mb-3" style="color:#374151; font-size:.93rem; line-height:1.65;">
-                        <?= nl2br(htmlspecialchars(mb_substr($product['description'], 0, 300))) ?>
+                        <?= mb_substr(strip_tags($product['description']), 0, 300) ?>
                         <?= mb_strlen($product['description']) > 300 ? '...' : '' ?>
                     </div>
                     <hr class="divider">
@@ -459,7 +459,7 @@ $mainImage = !empty($images[0]['image_path']) ? BASE_URL . '/' . ltrim($images[0
         <div class="desc-card">
             <h5><i class="bi bi-file-text me-2 text-primary"></i>Mô tả sản phẩm</h5>
             <div style="color:#374151; line-height:1.7; font-size:.95rem;">
-                <?= nl2br(htmlspecialchars($product['description'])) ?>
+                <?= $product['description'] ?>
             </div>
         </div>
     <?php endif; ?>
@@ -525,7 +525,7 @@ function switchImage(thumb, src) {
 /* ---------- Wishlist Toggle ---------- */
 async function toggleWishlist(productId) {
     if (!IS_LOGGED_IN) {
-        window.location.href = '/login?redirect=' + encodeURIComponent(window.location.href);
+        window.location.href = '<?= BASE_URL ?>/login?redirect=' + encodeURIComponent(window.location.href);
         return;
     }
 

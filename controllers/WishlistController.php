@@ -233,7 +233,7 @@ class WishlistController
             $_SESSION['flash_type']    = 'danger';
         }
 
-        header('Location: /wishlist');
+        header('Location: ' . BASE_URL . '/wishlist');
         exit;
     }
 
@@ -263,7 +263,7 @@ class WishlistController
     private function requireLogin(): void
     {
         if (empty($_SESSION['user_id'])) {
-            header('Location: /login?redirect=' . urlencode($_SERVER['REQUEST_URI']));
+            header('Location: ' . BASE_URL . '/login?redirect=' . urlencode($_SERVER['REQUEST_URI']));
             exit;
         }
     }
@@ -277,7 +277,7 @@ class WishlistController
             $this->jsonResponse([
                 'success'  => false,
                 'message'  => 'Vui lòng đăng nhập để thực hiện.',
-                'redirect' => '/login',
+                'redirect' => BASE_URL . '/login',
             ], 401);
             exit;
         }

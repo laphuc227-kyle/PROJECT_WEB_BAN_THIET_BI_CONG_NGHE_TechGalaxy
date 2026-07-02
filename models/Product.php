@@ -211,32 +211,75 @@ class Product
     }
 
     /**
+     * Helper: Tạo slug từ tên (hỗ trợ tiếng Việt) và ĐẢM BẢO DUY NHẤT
+     */
+    private function generateUniqueSlug(string $name, ?int $ignoreId = null): string
+    {
+        // 1. Tạo base slug
+        $slug = mb_strtolower($name, 'UTF-8');
+        $vietnamese = ['à','á','ả','ã','ạ','ă','ắ','ặ','ằ','ẳ','ẵ','â','ấ','ậ','ầ','ẩ','ẫ','è','é','ẻ','ẽ','ẹ','ê','ế','ệ','ề','ể','ễ','ì','í','ỉ','ĩ','ị','ò','ó','ỏ','õ','ọ','ô','ố','ộ','ồ','ổ','ỗ','ơ','ớ','ợ','ờ','ở','ỡ','ù','ú','ủ','ũ','ụ','ư','ứ','ự','ừ','ử','ữ','ỳ','ý','ỷ','ỹ','ỵ','đ'];
+        $latin       = ['a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','e','e','e','e','e','e','e','e','e','e','e','i','i','i','i','i','o','o','o','o','o','o','o','o','o','o','o','o','o','o','o','o','o','u','u','u','u','u','u','u','u','u','u','u','y','y','y','y','y','d'];
+        $slug = str_replace($vietnamese, $latin, $slug);
+        $slug = preg_replace('/[^a-z0-9\s-]/', '', $slug);
+        $slug = preg_replace('/[\s]+/', '-', trim($slug));
+        
+        $baseSlug = $slug;
+        $counter = 1;
+
+        // 2. Vòng lặp kiểm tra trùng lặp trong Database
+        while (true) {
+            $sql = "SELECT COUNT(*) FROM products WHERE slug = :slug";
+            if ($ignoreId !== null) {
+                $sql .= " AND id != :ignoreId"; // Loại trừ chính ID đang sửa
+            }
+            
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindValue(':slug', $slug, \PDO::PARAM_STR);
+            if ($ignoreId !== null) {
+                $stmt->bindValue(':ignoreId', $ignoreId, \PDO::PARAM_INT);
+            }
+            $stmt->execute();
+            
+            if ($stmt->fetchColumn() == 0) {
+                break; // Nếu không trùng thì thoát vòng lặp
+            }
+            
+            // Nếu trùng, thêm hậu tố -1, -2...
+            $slug = $baseSlug . '-' . $counter;
+            $counter++;
+        }
+
+        return $slug;
+    }
+
+    /**
      * Cập nhật sản phẩm theo ID
      */
     public function updateProduct(int $id, array $data): bool
-{
-    $slug = $this->generateSlug($data['name']);
+    {
+        // GỌI HÀM SINH SLUG MỚI (truyền thêm $id vào để loại trừ)
+        $slug = $this->generateUniqueSlug($data['name'], $id);
 
-    $stmt = $this->db->prepare("
-        UPDATE products
-        SET name = :name, slug = :slug, description = :description,
-            price = :price, sale_price = :sale_price, stock = :stock,
-            category_id = :category_id, status = :status
-        WHERE id = :id
-    ");
+        $stmt = $this->db->prepare("
+            UPDATE products
+            SET name = :name, slug = :slug, description = :description,
+                price = :price, sale_price = :sale_price, stock = :stock,
+                category_id = :category_id, status = :status
+            WHERE id = :id
+        ");
 
-    $stmt->bindValue(':name',        $data['name'],              PDO::PARAM_STR);
-    $stmt->bindValue(':slug',        $slug,                      PDO::PARAM_STR);
-    $stmt->bindValue(':description', $data['description'] ?? '', PDO::PARAM_STR);
-    $stmt->bindValue(':price',       $data['price'],             PDO::PARAM_STR);
-    $stmt->bindValue(':sale_price',  $data['sale_price'] ?? null);
-    $stmt->bindValue(':stock',       $data['stock'] ?? 0,        PDO::PARAM_INT);
-    $stmt->bindValue(':category_id', $data['category_id'],       PDO::PARAM_INT);
-    $stmt->bindValue(':status',      $data['status'] ?? 'active',PDO::PARAM_STR);
-    $stmt->bindValue(':id',          $id,                        PDO::PARAM_INT);
+        $stmt->bindValue(':name',        $data['name'],              \PDO::PARAM_STR);
+        $stmt->bindValue(':slug',        $slug,                      \PDO::PARAM_STR);
+        $stmt->bindValue(':description', $data['description'] ?? '', \PDO::PARAM_STR);
+        $stmt->bindValue(':price',       $data['price'],             \PDO::PARAM_STR);
+        $stmt->bindValue(':sale_price',  $data['sale_price'] ?? null);
+        $stmt->bindValue(':stock',       $data['stock'] ?? 0,        \PDO::PARAM_INT);
+        $stmt->bindValue(':category_id', $data['category_id'],       \PDO::PARAM_INT);
+        $stmt->bindValue(':status',      $data['status'] ?? 'active',\PDO::PARAM_STR);
+        $stmt->bindValue(':id',          $id,                        \PDO::PARAM_INT);
 
-    return $stmt->execute();
-}
+        return $stmt->execute();
+    }
 
     /**
      * Xóa mềm (soft delete) sản phẩm theo ID

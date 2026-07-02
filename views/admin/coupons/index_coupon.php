@@ -84,7 +84,7 @@ $coupons = $paginated['items'];
                 <?= date('d/m/Y', strtotime($coupon['end_date'])) ?>
               </td>
               <td>
-                <?php if ($coupon['status'] !== 'active'): ?>
+                <?php if ((int) $coupon['status'] !== 1): ?>
                   <span class="badge text-bg-secondary rounded-pill">Vô hiệu</span>
                 <?php elseif ($isExpired): ?>
                   <span class="badge text-bg-danger rounded-pill">Hết hạn</span>

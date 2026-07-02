@@ -7,7 +7,6 @@ require_once __DIR__ . '/../../includes/navbar.php';
 <div class="container py-5">
     <form action="<?= BASE_URL ?>/checkout" method="POST">
 
-```
     <div class="row g-4">
 
         <!-- LEFT -->
@@ -134,7 +133,7 @@ require_once __DIR__ . '/../../includes/navbar.php';
                             </div>
 
                             <div>
-                                <?= formatPrice($item['subtotal']) ?>
+                                <?= formatPrice($item['price'] * $item['quantity']) ?>
                             </div>
 
                         </div>
@@ -236,7 +235,6 @@ require_once __DIR__ . '/../../includes/navbar.php';
     </div>
 
 </form>
-```
 
 </div>
 

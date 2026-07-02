@@ -12,34 +12,31 @@ require_once __DIR__ . '/../models/CartItem.php';
 require_once __DIR__ . '/../models/Coupon.php';
 
 // 2. KHAI BÁO SỬ DỤNG
-use Models\Cart;
-use Models\CartItem;
-use Models\Product;
-use Models\Coupon;
+use Models\Product; // Chỉ giữ Product vì các class dưới đã được Quân chuyển ra Global
 
 class CartController
 {
-    private Cart $cartModel;
-    private CartItem $cartItemModel;
+    private \Cart $cartModel;
+    private \CartItem $cartItemModel; 
     private Product $productModel;
-    private Coupon $couponModel;
+    private \Coupon $couponModel;
 
     public function __construct()
     {
-        $this->cartModel     = new Cart();
-        $this->cartItemModel = new CartItem();
+        $this->cartModel     = new \Cart();
+        $this->cartItemModel = new \CartItem(); 
         $this->productModel  = new Product();
-        $this->couponModel   = new Coupon();
+        $this->couponModel   = new \Coupon();
     }
 
     // ----------------------------------------------------------
     // Helper: lấy user_id từ session (null nếu guest)
-    // AuthController lưu $_SESSION['user']['id']
     // ----------------------------------------------------------
     private function getUserId(): ?int
     {
-        return isset($_SESSION['user_id']['id'])
-            ? (int) $_SESSION['user_id']['id']
+        // GIỮ CODE CỦA QUÂN: Sửa lỗi lấy session_id
+        return !empty($_SESSION['user_id'])
+            ? (int) $_SESSION['user_id']
             : null;
     }
 
@@ -56,7 +53,6 @@ class CartController
 
     // ----------------------------------------------------------
     // Helper: tính lại toàn bộ tổng tiền giỏ hàng
-    // Dùng lại nhiều lần trong update/remove/coupon
     // ----------------------------------------------------------
     private function calcTotals(int $cartId): array
     {
@@ -104,29 +100,17 @@ class CartController
         $productId = (int) ($_POST['product_id'] ?? $raw['product_id'] ?? 0);
         $quantity  = (int) ($_POST['quantity']   ?? $raw['quantity']   ?? 1);
 
-        // Validate input
         if ($productId <= 0 || $quantity <= 0) {
-            $this->json([
-                'success' => false,
-                'message' => 'Dữ liệu không hợp lệ.',
-            ], 400);
+            $this->json(['success' => false, 'message' => 'Dữ liệu không hợp lệ.'], 400);
         }
 
-        // Kiểm tra sản phẩm tồn tại
         $product = $this->productModel->findById($productId);
         if (!$product) {
-            $this->json([
-                'success' => false,
-                'message' => 'Sản phẩm không tồn tại.',
-            ], 404);
+            $this->json(['success' => false, 'message' => 'Sản phẩm không tồn tại.'], 404);
         }
 
-        // Kiểm tra stock
         if ((int) $product['stock'] <= 0) {
-            $this->json([
-                'success' => false,
-                'message' => 'Sản phẩm đã hết hàng.',
-            ], 422);
+            $this->json(['success' => false, 'message' => 'Sản phẩm đã hết hàng.'], 422);
         }
 
         $userId    = $this->getUserId();
@@ -134,18 +118,13 @@ class CartController
         $cart      = $this->cartModel->getOrCreateCart($userId, $sessionId);
         $cartId    = (int) $cart['id'];
 
-        // Kiểm tra tổng quantity không vượt stock
         $existing = $this->cartItemModel->findItem($cartId, $productId);
         $newQty   = $quantity + ($existing ? (int) $existing['quantity'] : 0);
 
         if ($newQty > (int) $product['stock']) {
-            $this->json([
-                'success' => false,
-                'message' => 'Số lượng vượt quá tồn kho. Còn lại: ' . $product['stock'] . ' sản phẩm.',
-            ], 422);
+            $this->json(['success' => false, 'message' => 'Số lượng vượt quá tồn kho. Còn lại: ' . $product['stock'] . ' sản phẩm.'], 422);
         }
 
-        // Lấy giá: ưu tiên sale_price nếu có   
         $price = !empty($product['sale_price']) ? (int)$product['sale_price'] : (int)$product['price'];
 
         $this->cartItemModel->addItem($cartId, $productId, $quantity, $price);
@@ -159,30 +138,19 @@ class CartController
         ]);
     }
 
-    // ----------------------------------------------------------
-    // POST /cart/update — cập nhật số lượng (AJAX → JSON)
-    // Dùng debounce 500ms ở frontend trước khi gọi
-    // ----------------------------------------------------------
     public function updateCart(): void
     {
         $productId = (int) ($_POST['product_id'] ?? 0);
         $quantity  = (int) ($_POST['quantity']   ?? 0);
 
         if ($productId <= 0) {
-            $this->json([
-                'success' => false,
-                'message' => 'Dữ liệu không hợp lệ.',
-            ], 400);
+            $this->json(['success' => false, 'message' => 'Dữ liệu không hợp lệ.'], 400);
         }
 
-        // Nếu quantity > 0 thì kiểm tra stock
         if ($quantity > 0) {
             $product = $this->productModel->findById($productId);
             if ($product && $quantity > (int) $product['stock']) {
-                $this->json([
-                    'success' => false,
-                    'message' => 'Số lượng vượt quá tồn kho. Còn lại: ' . $product['stock'],
-                ], 422);
+                $this->json(['success' => false, 'message' => 'Số lượng vượt quá tồn kho. Còn lại: ' . $product['stock']], 422);
             }
         }
 
@@ -191,15 +159,10 @@ class CartController
         $cart      = $this->cartModel->getOrCreateCart($userId, $sessionId);
         $cartId    = (int) $cart['id'];
 
-        // quantity = 0 → updateQuantity tự xoá item
         $success = $this->cartItemModel->updateQuantity($cartId, $productId, $quantity);
         if (!$success) {
-            $this->json([
-                'success' => false,
-                'message' => 'Không tìm thấy sản phẩm trong giỏ.'
-            ], 404);
+            $this->json(['success' => false, 'message' => 'Không tìm thấy sản phẩm trong giỏ.'], 404);
         }
-        // Tính lại tổng tiền để trả về frontend cập nhật UI
         $totals    = $this->calcTotals($cartId);
         $cartCount = $this->cartModel->countItems($cartId);
 
@@ -210,7 +173,6 @@ class CartController
             'shippingFee' => $totals['shippingFee'],
             'discount'    => $totals['discount'],
             'total'       => $totals['total'],
-            // Format sẵn để JS hiển thị không cần xử lý
             'subtotalFmt'    => number_format($totals['subtotal'],    0, ',', '.') . ' ₫',
             'shippingFeeFmt' => number_format($totals['shippingFee'], 0, ',', '.') . ' ₫',
             'discountFmt'    => number_format($totals['discount'],    0, ',', '.') . ' ₫',
@@ -218,18 +180,12 @@ class CartController
         ]);
     }
 
-    // ----------------------------------------------------------
-    // POST /cart/remove — xoá 1 sản phẩm (AJAX → JSON)
-    // ----------------------------------------------------------
     public function removeFromCart(): void
     {
         $productId = (int) ($_POST['product_id'] ?? 0);
 
         if ($productId <= 0) {
-            $this->json([
-                'success' => false,
-                'message' => 'Dữ liệu không hợp lệ.',
-            ], 400);
+            $this->json(['success' => false, 'message' => 'Dữ liệu không hợp lệ.'], 400);
         }
 
         $userId    = $this->getUserId();
@@ -240,10 +196,7 @@ class CartController
         $success = $this->cartItemModel->removeItem($cartId, $productId);
 
         if (!$success) {
-            $this->json([
-                'success' => false,
-                'message' => 'Không tìm thấy sản phẩm trong giỏ.'
-            ], 404);
+            $this->json(['success' => false, 'message' => 'Không tìm thấy sản phẩm trong giỏ.'], 404);
         }
 
         $totals    = $this->calcTotals($cartId);
@@ -264,9 +217,6 @@ class CartController
         ]);
     }
 
-    // ----------------------------------------------------------
-    // POST /cart/clear — xoá toàn bộ giỏ (redirect)
-    // ----------------------------------------------------------
     public function clearCart(): void
     {
         $userId    = $this->getUserId();
@@ -275,29 +225,18 @@ class CartController
 
         $this->cartModel->clearCart((int) $cart['id']);
 
-        // Xoá coupon trong session
-        unset(
-            $_SESSION['coupon_code'],
-            $_SESSION['coupon_id'],
-            $_SESSION['coupon_discount']
-        );
+        unset($_SESSION['coupon_code'], $_SESSION['coupon_id'], $_SESSION['coupon_discount']);
 
         setFlash('success', 'Đã xoá toàn bộ giỏ hàng.');
         redirect('/cart');
     }
 
-    // ----------------------------------------------------------
-    // POST /cart/coupon — áp mã giảm giá (AJAX → JSON)
-    // ----------------------------------------------------------
     public function applyCoupon(): void
     {
         $code = strtoupper(trim($_POST['coupon_code'] ?? ''));
 
         if ($code === '') {
-            $this->json([
-                'success' => false,
-                'message' => 'Vui lòng nhập mã giảm giá.',
-            ], 400);
+            $this->json(['success' => false, 'message' => 'Vui lòng nhập mã giảm giá.'], 400);
         }
 
         $userId    = $this->getUserId();
@@ -308,31 +247,19 @@ class CartController
         $subtotal = (float) $this->cartModel->getCartSubtotal($cartId);
 
         if ($subtotal <= 0) {
-            $this->json([
-                'success' => false,
-                'message' => 'Giỏ hàng trống, không thể áp mã giảm giá.',
-            ], 422);
+            $this->json(['success' => false, 'message' => 'Giỏ hàng trống, không thể áp mã giảm giá.'], 422);
         }
 
-        $result = $this->couponModel->validateCoupon(
-            $code,
-            $subtotal,
-            $userId ?? 0
-        );
+        $result = $this->couponModel->validateCoupon($code, $subtotal, $userId ?? 0);
 
         if (!$result['valid']) {
-            $this->json([
-                'success' => false,
-                'message' => $result['message'],
-            ]);
+            $this->json(['success' => false, 'message' => $result['message']]);
         }
 
-        // Lưu coupon vào session để dùng lại ở checkout
         $_SESSION['coupon_code']     = $result['coupon']['code'];
         $_SESSION['coupon_id']       = (int) $result['coupon']['id'];
         $_SESSION['coupon_discount'] = (int) $result['discount'];
 
-        // Tính lại tổng tiền với discount mới
         $shippingFee = (int) $subtotal >= 500000 ? 0 : 30000;
         $discount    = (int) $result['discount'];
         $total       = max(0, (int) $subtotal + $shippingFee - $discount);
@@ -350,8 +277,63 @@ class CartController
     }
 
     // ----------------------------------------------------------
-    // GET /cart/count — đếm badge navbar (AJAX → JSON)
+    // GET /checkout — hiển thị trang thanh toán
     // ----------------------------------------------------------
+    public function showCheckout(): void
+    {
+        $userId    = $this->getUserId();
+        $sessionId = session_id();
+
+        $cart   = $this->cartModel->getOrCreateCart($userId, $sessionId);
+        $cartId = (int) $cart['id'];
+        
+        $cartItems  = $this->cartItemModel->getByCartId($cartId);
+
+        if (empty($cartItems)) {
+            setFlash('error', 'Giỏ hàng của bạn đang trống, không thể thanh toán.');
+            redirect('/cart');
+            exit;
+        }   
+
+        $totals      = $this->calcTotals($cartId);
+        $subtotal    = $totals['subtotal'];
+        $shippingFee = $totals['shippingFee'];
+        $discount    = $totals['discount'];
+        $grandTotal  = $totals['total'];
+        
+        $couponCode  = $_SESSION['coupon_code'] ?? '';
+        $pageTitle   = 'Thanh toán đơn hàng';
+
+        require_once __DIR__ . '/../views/user/checkout.php';
+    }
+
+    // ----------------------------------------------------------
+    // POST /checkout — xử lý khi bấm nút Xác nhận đặt hàng
+    // ----------------------------------------------------------
+    public function processCheckout(): void
+    {
+        $addressId = $_POST['address_id'] ?? null;
+        $newName   = trim($_POST['new_name'] ?? '');
+        $newPhone  = trim($_POST['new_phone'] ?? '');
+        $newAddr   = trim($_POST['new_address'] ?? '');
+        $note      = trim($_POST['note'] ?? '');
+        $payment   = $_POST['payment_method'] ?? 'COD';
+
+        $userId    = $this->getUserId();
+        $sessionId = session_id();
+        $cart      = $this->cartModel->getOrCreateCart($userId, $sessionId);
+        $cartId    = (int) $cart['id'];
+
+        // Lưu Order...
+
+        $this->cartModel->clearCart($cartId);
+
+        unset($_SESSION['coupon_code'], $_SESSION['coupon_id'], $_SESSION['coupon_discount']);
+
+        redirect('/order-complete');
+        exit;
+    }
+
     public function getCartCount(): void
     {
         $userId    = $this->getUserId();
@@ -372,7 +354,6 @@ $basePath = parse_url(BASE_URL ?? '', PHP_URL_PATH) ?: '';
 $uri      = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 $path     = trim((string) preg_replace('#^' . preg_quote($basePath, '#') . '#', '', $uri), '/');
 
-// Điều hướng dựa trên URL hiện tại
 if ($path === 'cart') {
     $cartController->showCart();
 } elseif ($path === 'cart/add') {
@@ -387,11 +368,12 @@ if ($path === 'cart') {
     $cartController->applyCoupon();
 } elseif ($path === 'cart/count') {
     $cartController->getCartCount();
+
+// GIỮ LẠI ĐIỀU HƯỚNG CHECKOUT CỦA PHÚC ĐỂ GỌI ĐÚNG HÀM CỦA QUÂN
 } elseif ($path === 'checkout') {
-    // Tạm thời để trống chờ code trang Checkout của nhóm
-    if (method_exists($cartController, 'showCheckout')) {
-        $cartController->showCheckout();
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $cartController->processCheckout();
     } else {
-        echo "<h1>Trang thanh toán đang được xây dựng!</h1>";
+        $cartController->showCheckout();
     }
 }

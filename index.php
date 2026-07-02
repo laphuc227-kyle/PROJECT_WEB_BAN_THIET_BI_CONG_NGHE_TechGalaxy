@@ -38,12 +38,10 @@ $routes = [
 
     // --- Giỏ hàng & Thanh toán ---
     'cart'                  => __DIR__ . '/controllers/CartController.php',
-    'checkout'              => __DIR__ . '/controllers/CartController.php',
     'order-complete'        => __DIR__ . '/views/user/order_complete.php',
 
     // --- Tài khoản người dùng ---
     'my-account'            => __DIR__ . '/views/user/my_account.php',
-    'my-orders'             => __DIR__ . '/views/user/my_orders.php',
     'my-address'            => __DIR__ . '/views/user/my_address.php',
     'wishlist'              => __DIR__ . '/controllers/WishlistController.php',
 
@@ -63,7 +61,6 @@ $routes = [
     'admin/reports'         => __DIR__ . '/controllers/ReportController.php',
     'admin/reports/export'  => __DIR__ . '/controllers/ReportController.php',
     'admin/settings'        => __DIR__ . '/controllers/SettingController.php',
-    'admin/orders'          => __DIR__ . '/controllers/OrderController.php',
     'admin/products'        => __DIR__ . '/controllers/ProductController.php',
     'admin/customers'       => __DIR__ . '/controllers/CustomerController.php',
     // --- Tài khoản người dùng ---
@@ -85,8 +82,21 @@ if (isset($routes[$path])) {
 // 2. Xử lý các đường dẫn động (chứa ID phía sau) bằng strpos
 // (strpos kiểm tra xem đường dẫn có BẮT ĐẦU bằng cụm từ đó không)
 // --- Các route động còn thiếu ---
-if (strpos($path, 'admin/orders') === 0) {
-    require __DIR__ . '/controllers/OrderController.php'; exit;
+// ĐÃ SỬA: gọi đúng hàm trong OrderController thay vì chỉ require (trắng trang)
+if (preg_match('@^admin/orders/(\d+)/status$@', $path, $m) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    require __DIR__ . '/controllers/OrderController.php';
+    (new OrderController())->adminUpdateStatus((int) $m[1]);
+    exit;
+}
+if (preg_match('@^admin/orders/(\d+)$@', $path, $m)) {
+    require __DIR__ . '/controllers/OrderController.php';
+    (new OrderController())->adminDetail((int) $m[1]);
+    exit;
+}
+if ($path === 'admin/orders') {
+    require __DIR__ . '/controllers/OrderController.php';
+    (new OrderController())->adminIndex();
+    exit;
 }
 if (strpos($path, 'admin/products') === 0) {
     require __DIR__ . '/controllers/ProductController.php'; exit;
@@ -117,6 +127,49 @@ if (strpos($path, 'reset-password') === 0) {
 // --- Route động: Cart actions ---
 if (strpos($path, 'cart') === 0) {
     require __DIR__ . '/controllers/CartController.php'; exit;
+}
+// --- Route động: Checkout actions ---
+// --- Route động: Checkout actions ---
+if ($path === 'checkout') {
+    require_once __DIR__ . '/controllers/OrderController.php';
+    $orderController = new OrderController();
+    
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        // Bấm nút Đặt hàng -> Chạy hàm placeOrder của nhóm bạn
+        $orderController->placeOrder();
+    } else {
+        // Vào trang Checkout -> Chạy hàm showCheckout của nhóm bạn
+        $orderController->showCheckout();
+    }
+    exit;
+}
+
+// --- Route động: Order Complete ---
+if (preg_match('@^order/complete/(\d+)$@', $path, $m)) {
+    require __DIR__ . '/controllers/OrderController.php';
+    $orderController = new OrderController();
+    $orderController->orderComplete((int) $m[1]);
+    exit;
+}
+
+// --- Route động: Đơn hàng của tôi (danh sách + chi tiết + huỷ) ---
+if ($path === 'my-orders') {
+    require __DIR__ . '/controllers/OrderController.php';
+    $orderController = new OrderController();
+    $orderController->myOrders();
+    exit;
+}
+if (preg_match('@^my-orders/(\d+)/cancel$@', $path, $m) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    require __DIR__ . '/controllers/OrderController.php';
+    $orderController = new OrderController();
+    $orderController->cancelOrder((int) $m[1]);
+    exit;
+}
+if (preg_match('@^my-orders/(\d+)$@', $path, $m)) {
+    require __DIR__ . '/controllers/OrderController.php';
+    $orderController = new OrderController();
+    $orderController->orderDetail((int) $m[1]);
+    exit;
 }
 
 // --- Route động: Wishlist actions ---

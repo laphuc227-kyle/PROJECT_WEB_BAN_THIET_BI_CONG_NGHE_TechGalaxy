@@ -2,7 +2,8 @@
 // File: models/CartItem.php
 declare(strict_types=1);
 
-class CartItem extends BaseModel
+if (!class_exists('CartItem')) {
+    class CartItem extends \BaseModel
 {
     protected string $table = 'cart_items';
 
@@ -164,5 +165,5 @@ class CartItem extends BaseModel
         return $this->delete((int)$item['id']);
     }
 
-
+}
 }

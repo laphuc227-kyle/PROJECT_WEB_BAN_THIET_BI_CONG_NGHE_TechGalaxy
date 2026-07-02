@@ -405,6 +405,36 @@ $mainImage = !empty($images[0]['image_path']) ? BASE_URL . '/' . ltrim($images[0
 
                 <hr class="divider">
 
+                <div class="d-flex flex-column gap-3 mb-4">
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="fw-medium text-muted">Số lượng:</span>
+                        <div class="input-group" style="width: 130px;">
+                            <button class="btn btn-outline-secondary" type="button" onclick="let q=document.getElementById('qty'); if(q.value>1) q.value--;"><i class="bi bi-dash"></i></button>
+                            <input type="number" id="qty" class="form-control text-center fw-bold" value="1" min="1" max="<?= $product['stock'] ?>">
+                            <button class="btn btn-outline-secondary" type="button" onclick="let q=document.getElementById('qty'); if(q.value < <?= $product['stock'] ?>) q.value++;"><i class="bi bi-plus"></i></button>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2">
+                        <button class="btn btn-primary fw-bold px-4 d-flex align-items-center gap-2" 
+                                style="border-radius: 12px; font-size: 1.05rem;" 
+                                onclick="addToCart(<?= $product['id'] ?>, document.getElementById('qty').value)" 
+                                <?= !$inStock ? 'disabled' : '' ?>>
+                            <i class="bi bi-cart-plus fs-5"></i> Thêm vào giỏ hàng
+                        </button>
+
+                        <button class="btn-wishlist-toggle <?= $isWishlisted ? 'active' : '' ?>"
+                                id="wishlistBtn"
+                                onclick="toggleWishlist(<?= $product['id'] ?>)"
+                                <?= !$isLoggedIn ? 'title="Đăng nhập để thêm vào yêu thích"' : '' ?>>
+                            <i class="bi bi-heart<?= $isWishlisted ? '-fill' : '' ?>" id="wishlistIcon"></i>
+                            <span id="wishlistText">
+                                <?= $isWishlisted ? 'Đã yêu thích' : 'Thêm vào yêu thích' ?>
+                            </span>
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Thông tin thêm -->
                 <div class="row g-2" style="font-size:.85rem; color:var(--text-muted);">
                     <div class="col-6 d-flex align-items-center gap-2">
@@ -542,6 +572,60 @@ function showToast(message, type = 'success') {
     msgEl.textContent = message;
     new bootstrap.Toast(toastEl, { delay: 3000 }).show();
 }
+
+/* ---------- Add To Cart (AJAX) - Đã Fix Triệt Để ---------- */
+async function addToCart(productId, quantity = 1) {
+    try {
+        const pId = parseInt(productId) || 0;
+        const qty = parseInt(quantity) || 1;
+
+        if (pId <= 0) {
+            alert("Lỗi: Không lấy được ID sản phẩm.");
+            return;
+        }
+
+        // LỚP BẢO VỆ 1: Loại bỏ dấu gạch chéo thừa ở BASE_URL để chống Redirect 301 làm rớt POST
+        let baseUrl = '<?= BASE_URL ?>'.replace(/\/+$/, '');
+        let url = baseUrl + '/cart/add';
+
+        // LỚP BẢO VỆ 2: Đóng gói chuẩn JSON để không bị giới hạn bởi Server
+        const res = await fetch(url, { 
+            method: 'POST', 
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                product_id: pId,
+                quantity: qty
+            })
+        });
+        
+        const data = await res.json();
+
+        if (data.success) {
+            // Thông báo thành công
+            if (typeof showToast === 'function') showToast(data.message, 'success');
+            else alert(data.message);
+            
+            // Cập nhật số lượng trên Navbar
+            const badge = document.getElementById('cartCountBadge');
+            if (badge) {
+                badge.textContent = data.cartCount;
+                badge.classList.remove('d-none');
+            }
+        } else {
+            // Thông báo lỗi từ PHP (VD: Hết hàng, Vượt tồn kho)
+            if (typeof showToast === 'function') showToast(data.message, 'danger');
+            else alert(data.message);
+        }
+    } catch (err) {
+        console.error("Lỗi quá trình Fetch:", err);
+        if (typeof showToast === 'function') showToast('Có lỗi xảy ra. Hãy tải lại trang!', 'danger');
+        else alert('Có lỗi xảy ra. Hãy tải lại trang!');
+    }
+}
+
 </script>
 </body>
 </html>

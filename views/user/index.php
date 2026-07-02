@@ -289,6 +289,11 @@ $brands = [
                             <span class="price-original text-muted text-decoration-line-through ms-2" style="font-size: 0.85rem;"><?= formatPrice((float)$p['price']) ?></span>
                         <?php endif; ?>
                     </div>
+                    <div class="product-card__price">
+                         </div>
+                    <button class="btn btn-primary w-100 mt-3 btn-sm fw-medium" style="border-radius: 8px;" onclick="addToCart(<?= $p['id'] ?>)" <?= !(($p['stock'] ?? 1) > 0) ? 'disabled' : '' ?>>
+                      <i class="bi bi-cart-plus me-1"></i> Thêm vào giỏ
+                    </button>
                 </div>
             </div>
         </div>
@@ -394,6 +399,11 @@ $brands = [
                       <span class="price-original text-muted text-decoration-line-through ms-2" style="font-size: 0.85rem;"><?= formatPrice((float)$product['price']) ?></span>
                   <?php endif; ?>
               </div>
+              <div class="product-card__price">
+                         </div>
+                    <button class="btn btn-primary w-100 mt-3 btn-sm fw-medium" style="border-radius: 8px;" onclick="addToCart(<?= $product['id'] ?>)" <?= !(($product['stock'] ?? 1) > 0) ? 'disabled' : '' ?>>
+                      <i class="bi bi-cart-plus me-1"></i> Thêm vào giỏ
+                    </button>
           </div>
       </div>
     </div>
@@ -464,6 +474,60 @@ $brands = [
 <script>
   window.TG_BASE_URL = '<?= BASE_URL ?>';
   window.TG_IS_LOGGED_IN = <?= isLoggedIn() ? 'true' : 'false' ?>;
+
+/* ---------- Add To Cart (AJAX) - Đã Fix Triệt Để ---------- */
+async function addToCart(productId, quantity = 1) {
+    try {
+        const pId = parseInt(productId) || 0;
+        const qty = parseInt(quantity) || 1;
+
+        if (pId <= 0) {
+            alert("Lỗi: Không lấy được ID sản phẩm.");
+            return;
+        }
+
+        // LỚP BẢO VỆ 1: Loại bỏ dấu gạch chéo thừa ở BASE_URL để chống Redirect 301 làm rớt POST
+        let baseUrl = '<?= BASE_URL ?>'.replace(/\/+$/, '');
+        let url = baseUrl + '/cart/add';
+
+        // LỚP BẢO VỆ 2: Đóng gói chuẩn JSON để không bị giới hạn bởi Server
+        const res = await fetch(url, { 
+            method: 'POST', 
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                product_id: pId,
+                quantity: qty
+            })
+        });
+        
+        const data = await res.json();
+
+        if (data.success) {
+            // Thông báo thành công
+            if (typeof showToast === 'function') showToast(data.message, 'success');
+            else alert(data.message);
+            
+            // Cập nhật số lượng trên Navbar
+            const badge = document.getElementById('cartCountBadge');
+            if (badge) {
+                badge.textContent = data.cartCount;
+                badge.classList.remove('d-none');
+            }
+        } else {
+            // Thông báo lỗi từ PHP (VD: Hết hàng, Vượt tồn kho)
+            if (typeof showToast === 'function') showToast(data.message, 'danger');
+            else alert(data.message);
+        }
+    } catch (err) {
+        console.error("Lỗi quá trình Fetch:", err);
+        if (typeof showToast === 'function') showToast('Có lỗi xảy ra. Hãy tải lại trang!', 'danger');
+        else alert('Có lỗi xảy ra. Hãy tải lại trang!');
+    }
+}
+  
 </script>
 <?php
 $extraJS = '<script>document.addEventListener("DOMContentLoaded",function(){window.initHeroSwiper?.();window.initFeaturedSwiper?.();window.initBrandsSwiper?.();});</script>';

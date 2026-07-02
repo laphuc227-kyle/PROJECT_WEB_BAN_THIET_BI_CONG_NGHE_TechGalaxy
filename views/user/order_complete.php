@@ -137,7 +137,6 @@ $total    = (float)($order['total'] ?? 0);
 
     <main class="order-complete-page py-5">
 
-    ```
     <div class="container">
 
         <!-- SUCCESS -->
@@ -450,4 +449,3 @@ $total    = (float)($order['total'] ?? 0);
 </main>
 
 <?php require_once __DIR__ . '/../../includes/footer.php'; ?>
-

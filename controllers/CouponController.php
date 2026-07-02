@@ -20,7 +20,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $max_uses   = (int) ($_POST['max_uses'] ?? 1);
     $start_date = $_POST['start_date'] ?? date('Y-m-d');
     $end_date   = $_POST['end_date'] ?? date('Y-m-d');
-    $status     = $_POST['status'] ?? 'active';
+    // ĐÃ SỬA: form create.php không có field 'status' -> mã mới luôn active (1),
+    // cột status là tinyint(1) nên không được gán chuỗi 'active'
+    $status     = 1;
 
     // Đẩy vào Database bằng hàm insert có sẵn của BaseModel
     $couponModel->insert([

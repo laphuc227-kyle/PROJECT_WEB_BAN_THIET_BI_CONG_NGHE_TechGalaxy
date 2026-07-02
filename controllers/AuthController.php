@@ -95,6 +95,11 @@ class AuthController {
                 'avatar' => $user['avatar'] ?: 'default.png',
                 'role' => $user['role']
             ];
+
+            // ĐÃ THÊM: Gộp giỏ hàng khách (session_id) vào giỏ hàng của user thật
+            require_once __DIR__ . '/../models/Cart.php';
+            (new Cart())->mergeSessionToDb((int) $user['id'], session_id());
+
             setFlash('success', 'Đăng nhập thành công! Chào mừng bạn quay trở lại.');
             redirect('/');
         } else {

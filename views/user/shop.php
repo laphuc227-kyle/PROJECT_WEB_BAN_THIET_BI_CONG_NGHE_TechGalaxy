@@ -478,12 +478,14 @@ $isLoggedIn = !empty($_SESSION['user_id']);
                                 </div>
 
                                 <!-- Footer actions -->
-                                <div class="product-card__footer">
-    <a href="<?= BASE_URL ?>/product/<?= $p['id'] ?>"
-       class="btn btn-outline-primary btn-detail">
-        <i class="bi bi-eye me-1"></i>Xem chi tiết
-    </a>
-</div>
+                               <div class="product-card__footer d-flex gap-2">
+                                    <a href="<?= BASE_URL ?>/product/<?= $p['id'] ?>" class="btn btn-outline-secondary btn-sm flex-grow-1" style="border-radius: 8px;" title="Xem chi tiết">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <button class="btn btn-primary btn-sm flex-grow-1 fw-medium" style="border-radius: 8px;" onclick="addToCart(<?= $p['id'] ?>)" <?= !$inStock ? 'disabled' : '' ?>>
+                                        <i class="bi bi-cart-plus me-1"></i>Thêm
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -606,6 +608,60 @@ function showToast(message, type = 'success') {
     const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
     toast.show();
 }
+
+/* ---------- Add To Cart (AJAX) - Đã Fix Triệt Để ---------- */
+async function addToCart(productId, quantity = 1) {
+    try {
+        const pId = parseInt(productId) || 0;
+        const qty = parseInt(quantity) || 1;
+
+        if (pId <= 0) {
+            alert("Lỗi: Không lấy được ID sản phẩm.");
+            return;
+        }
+
+        // LỚP BẢO VỆ 1: Loại bỏ dấu gạch chéo thừa ở BASE_URL để chống Redirect 301 làm rớt POST
+        let baseUrl = '<?= BASE_URL ?>'.replace(/\/+$/, '');
+        let url = baseUrl + '/cart/add';
+
+        // LỚP BẢO VỆ 2: Đóng gói chuẩn JSON để không bị giới hạn bởi Server
+        const res = await fetch(url, { 
+            method: 'POST', 
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                product_id: pId,
+                quantity: qty
+            })
+        });
+        
+        const data = await res.json();
+
+        if (data.success) {
+            // Thông báo thành công
+            if (typeof showToast === 'function') showToast(data.message, 'success');
+            else alert(data.message);
+            
+            // Cập nhật số lượng trên Navbar
+            const badge = document.getElementById('cartCountBadge');
+            if (badge) {
+                badge.textContent = data.cartCount;
+                badge.classList.remove('d-none');
+            }
+        } else {
+            // Thông báo lỗi từ PHP (VD: Hết hàng, Vượt tồn kho)
+            if (typeof showToast === 'function') showToast(data.message, 'danger');
+            else alert(data.message);
+        }
+    } catch (err) {
+        console.error("Lỗi quá trình Fetch:", err);
+        if (typeof showToast === 'function') showToast('Có lỗi xảy ra. Hãy tải lại trang!', 'danger');
+        else alert('Có lỗi xảy ra. Hãy tải lại trang!');
+    }
+}
+
 </script>
 </body>
 </html>

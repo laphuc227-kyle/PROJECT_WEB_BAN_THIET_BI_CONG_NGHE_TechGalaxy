@@ -2,19 +2,37 @@
 // File: controllers/CartController.php
 declare(strict_types=1);
 
+namespace Controllers;
+
+// 1. NẠP TRỰC TIẾP CÁC FILE MODEL
+require_once __DIR__ . '/../models/BaseModel.php';
+require_once __DIR__ . '/../models/Product.php';
+require_once __DIR__ . '/../models/Cart.php';
+require_once __DIR__ . '/../models/CartItem.php';
+require_once __DIR__ . '/../models/Coupon.php';
+
+// 2. KHAI BÁO SỬ DỤNG
+use Models\Product;
+
 class CartController
 {
-    private Cart $cartModel;
-    private CartItem $cartItemModel;
+    private \Cart $cartModel;
+    
+   
+    private \CartItem $cartItemModel; 
+    
     private Product $productModel;
-    private Coupon $couponModel;
+    private \Coupon $couponModel;
 
     public function __construct()
     {
-        $this->cartModel     = new Cart();
-        $this->cartItemModel = new CartItem();
+        $this->cartModel     = new \Cart();
+        
+        // ĐÃ SỬA: Thêm dấu \ khi khởi tạo CartItem
+        $this->cartItemModel = new \CartItem(); 
+        
         $this->productModel  = new Product();
-        $this->couponModel   = new Coupon();
+        $this->couponModel   = new \Coupon();
     }
 
     // ----------------------------------------------------------
@@ -23,8 +41,10 @@ class CartController
     // ----------------------------------------------------------
     private function getUserId(): ?int
     {
-        return isset($_SESSION['user']['id'])
-            ? (int) $_SESSION['user']['id']
+        // ĐÃ SỬA LẠI CHO ĐÚNG: AuthController lưu $_SESSION['user_id'] là số nguyên,
+        // không phải mảng — trước đây check ['id'] trên số nguyên nên luôn ra null
+        return !empty($_SESSION['user_id'])
+            ? (int) $_SESSION['user_id']
             : null;
     }
 
@@ -85,8 +105,9 @@ class CartController
     // ----------------------------------------------------------
     public function addToCart(): void
     {
-        $productId = (int) ($_POST['product_id'] ?? 0);
-        $quantity  = (int) ($_POST['quantity']   ?? 1);
+        $raw = json_decode(file_get_contents('php://input'), true) ?: [];
+        $productId = (int) ($_POST['product_id'] ?? $raw['product_id'] ?? 0);
+        $quantity  = (int) ($_POST['quantity']   ?? $raw['quantity']   ?? 1);
 
         // Validate input
         if ($productId <= 0 || $quantity <= 0) {
@@ -332,7 +353,84 @@ class CartController
             'totalFmt'       => number_format($total,       0, ',', '.') . ' ₫',
         ]);
     }
+// ----------------------------------------------------------
+    // GET /checkout — hiển thị trang thanh toán
+    // ----------------------------------------------------------
+   // ----------------------------------------------------------
+    // GET /checkout — hiển thị trang thanh toán
+    // ----------------------------------------------------------
+    public function showCheckout(): void
+    {
+        $userId    = $this->getUserId();
+        $sessionId = session_id();
 
+        // 1. Lấy thông tin giỏ hàng hiện tại
+        $cart   = $this->cartModel->getOrCreateCart($userId, $sessionId);
+        $cartId = (int) $cart['id'];
+        
+        // ĐÃ SỬA: Đổi $items thành $cartItems cho khớp với giao diện
+        $cartItems  = $this->cartItemModel->getByCartId($cartId);
+
+        // 2. Chặn người dùng nếu giỏ hàng trống mà cứ cố tình bấm vào thanh toán
+        if (empty($cartItems)) {
+            setFlash('error', 'Giỏ hàng của bạn đang trống, không thể thanh toán.');
+            redirect('/cart');
+            exit;
+        }   
+
+        // 3. Tính toán lại toàn bộ tiền bạc, thuế phí, mã giảm giá
+        $totals      = $this->calcTotals($cartId);
+        $subtotal    = $totals['subtotal'];
+        $shippingFee = $totals['shippingFee'];
+        $discount    = $totals['discount'];
+        
+        // ĐÃ SỬA: Đổi $total thành $grandTotal cho khớp với giao diện
+        $grandTotal  = $totals['total'];
+        
+        $couponCode  = $_SESSION['coupon_code'] ?? '';
+        $pageTitle   = 'Thanh toán đơn hàng';
+
+        // 4. Gọi file giao diện (HTML) của trang thanh toán ra hiển thị
+        require_once __DIR__ . '/../views/user/checkout.php';
+    }
+    // ----------------------------------------------------------
+    // POST /checkout — xử lý khi bấm nút Xác nhận đặt hàng
+    // ----------------------------------------------------------
+    public function processCheckout(): void
+    {
+        // 1. Nhận dữ liệu từ form gửi lên
+        $addressId = $_POST['address_id'] ?? null;
+        $newName   = trim($_POST['new_name'] ?? '');
+        $newPhone  = trim($_POST['new_phone'] ?? '');
+        $newAddr   = trim($_POST['new_address'] ?? '');
+        $note      = trim($_POST['note'] ?? '');
+        $payment   = $_POST['payment_method'] ?? 'COD';
+
+        $userId    = $this->getUserId();
+        $sessionId = session_id();
+        $cart      = $this->cartModel->getOrCreateCart($userId, $sessionId);
+        $cartId    = (int) $cart['id'];
+
+        // --- GÓC LƯU Ý CHO NHÓM ---
+        // Tại đây, bạn sẽ gọi OrderModel để insert dữ liệu vào bảng `orders` và `order_items`
+        // Ví dụ: $this->orderModel->createOrder($userId, $cartItems, $totals, $address...);
+        // ---------------------------
+
+        // 2. Sau khi lưu DB thành công -> Xóa giỏ hàng
+        $this->cartModel->clearCart($cartId);
+
+        // 3. Xóa mã giảm giá đang lưu trong phiên làm việc
+        unset(
+            $_SESSION['coupon_code'],
+            $_SESSION['coupon_id'],
+            $_SESSION['coupon_discount']
+        );
+
+        // 4. Chuyển hướng người dùng sang trang Đặt hàng thành công
+        // (Trong index.php của bạn đã có route 'order-complete')
+        redirect('/order-complete');
+        exit;
+    }
     // ----------------------------------------------------------
     // GET /cart/count — đếm badge navbar (AJAX → JSON)
     // ----------------------------------------------------------
@@ -346,3 +444,30 @@ class CartController
         $this->json(['cartCount' => $count]);
     }
 }
+
+// =========================================================
+// KHỞI TẠO VÀ ĐIỀU HƯỚNG (ROUTER) DÀNH CHO GIỎ HÀNG
+// =========================================================
+$cartController = new CartController();
+
+$basePath = parse_url(BASE_URL ?? '', PHP_URL_PATH) ?: '';
+$uri      = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+$path     = trim((string) preg_replace('#^' . preg_quote($basePath, '#') . '#', '', $uri), '/');
+
+// Điều hướng dựa trên URL hiện tại
+if ($path === 'cart') {
+    $cartController->showCart();
+} elseif ($path === 'cart/add') {
+    $cartController->addToCart();
+} elseif ($path === 'cart/update') {
+    $cartController->updateCart();
+} elseif ($path === 'cart/remove') {
+    $cartController->removeFromCart();
+} elseif ($path === 'cart/clear') {
+    $cartController->clearCart();
+} elseif ($path === 'cart/coupon') {
+    $cartController->applyCoupon();
+} elseif ($path === 'cart/count') {
+    $cartController->getCartCount();
+}
+// HẾT! Xóa bỏ hoàn toàn phần checkout ở đây

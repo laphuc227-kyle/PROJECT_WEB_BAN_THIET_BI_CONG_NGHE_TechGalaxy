@@ -25,7 +25,7 @@ require_once __DIR__ . '/../../includes/navbar.php';
           <div class="mb-4">
             <div class="d-flex justify-content-between mb-1">
               <label for="loginPassword" class="form-label fw-medium text-secondary small mb-0">Mật khẩu</label>
-              <a href="<?= BASE_URL ?>/forgot_password" class="text-primary small fw-semibold text-decoration-none">Quên mật khẩu?</a>
+              <a href="<?= BASE_URL ?>/forgot-password" class="text-primary small fw-semibold text-decoration-none">Quên mật khẩu?</a>
             </div>
             <div class="input-group">
               <span class="input-group-text bg-light border-0 text-muted"><i class="fa-solid fa-lock"></i></span>

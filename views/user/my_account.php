@@ -74,7 +74,7 @@ $activeTab = $_GET['tab'] ?? 'profile';
               <!-- Details Column -->
               <div class="col-12 col-lg-8">
                 <h5 class="fw-bold mb-4 text-dark">Chi tiết tài khoản</h5>
-                <form action="<?= BASE_URL ?>/account/update" method="POST">
+                <form action="<?= BASE_URL ?>/account/change-password" method="POST" class="col-12 col-lg-8">
                   <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                   
                   <div class="mb-3">

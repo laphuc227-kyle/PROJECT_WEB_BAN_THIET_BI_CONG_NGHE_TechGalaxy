@@ -46,7 +46,7 @@ class AuthController {
             $mail->send();
             return $otp; // Trả về mã OTP để hệ thống đối chiếu sau này
         } catch (Exception $e) {
-            // Nếu có lỗi (sai pass, mất mạng...), trả về false
+            // Ghi lỗi vào file log hệ thống thay vì in ra màn hình làm sập web
             error_log("Lỗi gửi mail: {$mail->ErrorInfo}");
             return false;
         }
@@ -493,14 +493,22 @@ class AuthController {
         }
         redirect('/account/addresses');
     }
+
     /**
      * Hiển thị trang Quên mật khẩu
      */
     public function showForgotPassword(): void {
         redirectIfAuthenticated();
         $pageTitle = 'Quên mật khẩu - TechGalaxy';
+        
+        // Tạo sẵn token phòng trường hợp hệ thống có check CSRF bảo mật
+        if (empty($_SESSION['csrf_token'])) {
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        }
+        
         require_once __DIR__ . '/../views/user/forgot_password.php';
     }
+
     /**
      * Xử lý gửi OTP Quên mật khẩu
      */
@@ -509,16 +517,17 @@ class AuthController {
         $email = sanitize($_POST['email'] ?? '');
         if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             setFlash('error', 'Vui lòng nhập email hợp lệ.');
-            redirect('/forgot_password.php');
+            redirect('/forgot-password'); // FIX: Đổi đuôi .php thành route sạch
             return;
         }
         $user = $this->userModel->getByEmail($email);
         if (!$user) {
             setFlash('error', 'Email không tồn tại trong hệ thống.');
-            redirect('/forgot_password.php');
+            redirect('/forgot-password'); // FIX: Đổi đuôi .php thành route sạch
             return;
         }
-        // Gửi OTP qua email
+        
+        // Gửi OTP qua email thật
         $otp = $this->sendOtp($email);
         if ($otp !== false) {
             // Lưu OTP vào DB
@@ -528,13 +537,14 @@ class AuthController {
                 'otp_expire' => $expire
             ]);
             $_SESSION['reset_email'] = $email;
-            setFlash('success', 'Mã OTP xác thực đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư (bao gồm cả thư rác).');
-            redirect('/reset_password.php');
+            setFlash('success', 'Mã OTP xác thực đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư.');
+            redirect('/reset-password'); // FIX: Đổi đuôi .php thành route sạch
         } else {
             setFlash('error', 'Không thể gửi email OTP lúc này. Vui lòng thử lại sau.');
-            redirect('/forgot_password.php');
+            redirect('/forgot-password'); // FIX: Đổi đuôi .php thành route sạch
         }
     }
+
     /**
      * Hiển thị trang đặt lại mật khẩu
      */
@@ -542,12 +552,13 @@ class AuthController {
         redirectIfAuthenticated();
         if (empty($_SESSION['reset_email'])) {
             setFlash('error', 'Vui lòng yêu cầu cấp lại mật khẩu trước.');
-            redirect('/forgot_password.php');
+            redirect('/forgot-password'); // FIX: Đổi đuôi .php thành route sạch
             return;
         }
         $pageTitle = 'Đặt lại mật khẩu - TechGalaxy';
         require_once __DIR__ . '/../views/user/reset_password.php';
     }
+
     /**
      * Xử lý đặt lại mật khẩu mới bằng OTP
      */
@@ -556,7 +567,7 @@ class AuthController {
         
         if (empty($_SESSION['reset_email'])) {
             setFlash('error', 'Yêu cầu không hợp lệ.');
-            redirect('/forgot_password.php');
+            redirect('/forgot-password'); // FIX: Đổi đuôi .php thành route sạch
             return;
         }
         $email = $_SESSION['reset_email'];
@@ -577,24 +588,27 @@ class AuthController {
         }
         if (!empty($errors)) {
             setFlash('error', implode('<br>', $errors));
-            redirect('/reset_password.php');
+            redirect('/reset-password'); // FIX: Đổi đuôi .php thành route sạch
             return;
         }
+        
         // Lấy thông tin user
         $user = $this->userModel->getByEmail($email);
         if (!$user) {
             setFlash('error', 'Tài khoản không tồn tại.');
-            redirect('/forgot_password.php');
+            redirect('/forgot-password'); // FIX: Đổi đuôi .php thành route sạch
             return;
         }
+        
         // Kiểm tra OTP
         $dbOtp = $user['otp_code'];
         $dbExpire = $user['otp_expire'] ? strtotime($user['otp_expire']) : 0;
         if ($dbOtp !== $otp || time() > $dbExpire) {
             setFlash('error', 'Mã OTP không chính xác hoặc đã hết hạn.');
-            redirect('/reset_password.php');
+            redirect('/reset-password'); // FIX: Đổi đuôi .php thành route sạch
             return;
         }
+        
         // Cập nhật mật khẩu mới và xoá OTP
         $hashedPassword = password_hash($newPassword, PASSWORD_BCRYPT, ['cost' => 12]);
         $success = $this->userModel->update((int)$user['id'], [
@@ -608,10 +622,9 @@ class AuthController {
             redirect('/login');
         } else {
             setFlash('error', 'Có lỗi xảy ra khi đổi mật khẩu.');
-            redirect('/reset_password.php');
+            redirect('/reset-password'); // FIX: Đổi đuôi .php thành route sạch
         }
     }
-// ← đóng hàm resetPassword()
 }
 // ← đóng class AuthController
 
@@ -658,6 +671,9 @@ if ($authPath === 'login') {
     // Sửa updateProfile thành updateAccount
     $method === 'POST' ? $authCtrl->updateAccount() : $authCtrl->showMyAccount();
 
+} elseif ($authPath === 'account/avatar') {
+    if ($method === 'POST') $authCtrl->uploadAvatar();
+
 } elseif ($authPath === 'account/addresses') {
     // Sửa showMyAddress thành showAddresses
     $authCtrl->showAddresses();
@@ -675,9 +691,8 @@ if ($authPath === 'login') {
 } elseif ($authPath === 'account/addresses/default') {
     $authCtrl->setDefaultAddress();
 
-} elseif ($authPath === 'account/change-password') {
-    // Sửa changePassword thành updatePassword. 
-    // Vì không có hàm showChangePassword (dùng chung giao diện account), ta redirect về tab password nếu người dùng vào bằng GET
+// Chấp nhận cả 2 đường dẫn để chống lỗi cache HTML
+} elseif ($authPath === 'account/change-password' || $authPath === 'account/password') {
     if ($method === 'POST') {
         $authCtrl->updatePassword();
     } else {

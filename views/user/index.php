@@ -93,16 +93,7 @@ foreach ($categories as &$cat) {
 }
 unset($cat); // Xóa tham chiếu sau khi vòng lặp kết thúc cho an toàn
 
-$latestProducts = [
-    ['id' => 11, 'name' => 'Samsung Galaxy S24 Ultra', 'slug' => 'galaxy-s24-ultra', 'price' => 31990000, 'sale_price' => null, 'image' => $img . '/products/product-1.jpg', 'category_name' => 'Điện thoại', 'is_new' => true, 'in_wishlist' => false],
-    ['id' => 12, 'name' => 'Dell XPS 15 9530', 'slug' => 'dell-xps-15', 'price' => 42990000, 'sale_price' => 39990000, 'image' => $img . '/products/product-2.jpg', 'category_name' => 'Laptop', 'is_new' => true, 'in_wishlist' => false],
-    ['id' => 13, 'name' => 'AirPods Pro 2 USB-C', 'slug' => 'airpods-pro-2', 'price' => 5990000, 'sale_price' => null, 'image' => $img . '/products/product-3.jpg', 'category_name' => 'Tai nghe', 'is_new' => true, 'in_wishlist' => false],
-    ['id' => 14, 'name' => 'Xiaomi 14 Ultra', 'slug' => 'xiaomi-14-ultra', 'price' => 26990000, 'sale_price' => 24990000, 'image' => $img . '/products/product-4.jpg', 'category_name' => 'Điện thoại', 'is_new' => true, 'in_wishlist' => false],
-    ['id' => 15, 'name' => 'LG Gram 16 2024', 'slug' => 'lg-gram-16', 'price' => 32990000, 'sale_price' => null, 'image' => $img . '/products/product-5.jpg', 'category_name' => 'Laptop', 'is_new' => true, 'in_wishlist' => false],
-    ['id' => 16, 'name' => 'Apple Watch Series 9', 'slug' => 'apple-watch-9', 'price' => 10990000, 'sale_price' => 9990000, 'image' => $img . '/products/product-6.jpg', 'category_name' => 'Smartwatch', 'is_new' => false, 'in_wishlist' => false],
-    ['id' => 17, 'name' => 'Keychron Q1 Pro', 'slug' => 'keychron-q1-pro', 'price' => 4590000, 'sale_price' => null, 'image' => $img . '/products/product-7.jpg', 'category_name' => 'Phụ kiện', 'is_new' => true, 'in_wishlist' => false],
-    ['id' => 18, 'name' => 'OnePlus 12', 'slug' => 'oneplus-12', 'price' => 18990000, 'sale_price' => 16990000, 'image' => $img . '/products/product-8.jpg', 'category_name' => 'Điện thoại', 'is_new' => true, 'in_wishlist' => false],
-];
+
 
 require_once __DIR__ . '/../../models/Post.php';
 $postModel = new Post();
@@ -420,7 +411,7 @@ $brands = [
   <div class="col-12 col-md-4">
     <article class="blog-card">
       <div class="blog-card__image-wrap">
-        <img src="<?= !empty($post['image']) ? BASE_URL . '/public/uploads/' . htmlspecialchars($post['image']) : BASE_URL . '/assets/img/blog-placeholder.jpg' ?>"
+        <img src="<?= !empty($post['image']) ? BASE_URL . '/public/uploads/' . htmlspecialchars($post['image']) : BASE_URL . '/assets/images/no-image.png' ?>"
              alt="<?= htmlspecialchars($post['title']) ?>"
              class="blog-card__image" loading="lazy">
       </div>

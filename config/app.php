@@ -5,7 +5,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-define('BASE_URL', 'http://localhost:8080/techgalaxy'); // Đảm bảo URL này khớp với folder XAMPP
+define('BASE_URL', 'http://localhost/techgalaxy'); // Đảm bảo URL này khớp với folder XAMPP
 define('APP_NAME', 'TechGalaxy');
 define('UPLOAD_PATH', __DIR__ . '/../public/uploads/');
 define('MAX_FILE_SIZE', 5 * 1024 * 1024); // 5MB

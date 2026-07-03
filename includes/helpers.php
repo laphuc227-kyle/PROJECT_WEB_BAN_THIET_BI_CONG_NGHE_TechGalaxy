@@ -143,3 +143,16 @@ if (!function_exists('formatHeroTitle')) {
         return nl2br($escapedTitle);
     }
 }
+if (!function_exists('getProductImageUrl')) {
+    function getProductImageUrl($imagePath) {
+        if (empty($imagePath)) {
+            return BASE_URL . '/assets/images/no-image.png';
+        }
+        $cleanPath = ltrim($imagePath, '/');
+        if (strpos($cleanPath, '/') !== false) {
+            return BASE_URL . '/' . $cleanPath;
+        }
+        return BASE_URL . '/public/uploads/products/' . $cleanPath;
+    }
+}
+

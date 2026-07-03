@@ -81,7 +81,7 @@ $inStock      = (int)($product['stock'] ?? 0) > 0;
 $isLoggedIn   = !empty($_SESSION['user_id']);
 
 // Ảnh chính (primary hoặc ảnh đầu tiên trong danh sách)
-$mainImage = !empty($images[0]['image_path']) ? BASE_URL . '/' . ltrim($images[0]['image_path'], '/') : BASE_URL . '/public/assets/img/no-image.png';?>
+$mainImage = getProductImageUrl($images[0]['image_path'] ?? null);?>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -331,8 +331,8 @@ $mainImage = !empty($images[0]['image_path']) ? BASE_URL . '/' . ltrim($images[0
                 <div class="gallery-thumbs">
                     <?php foreach ($images as $i => $img): ?>
                         <div class="thumb-item <?= $i === 0 ? 'active' : '' ?>"
-                             onclick="switchImage(this, '<?= htmlspecialchars('/' . $img['image_path']) ?>')">
-                            <img src="<?= BASE_URL . '/' . ltrim($img['image_path'], '/') ?>" 
+                             onclick="switchImage(this, '<?= htmlspecialchars(getProductImageUrl($img['image_path'] ?? null)) ?>')">
+                            <img src="<?= getProductImageUrl($img['image_path'] ?? null) ?>"
                                  alt="Ảnh <?= $i + 1 ?>"
                                  loading="lazy">
                         </div>
@@ -476,7 +476,7 @@ $mainImage = !empty($images[0]['image_path']) ? BASE_URL . '/' . ltrim($images[0
                     <?php
                     $rpHasSale = !empty($rp['sale_price']) && $rp['sale_price'] < $rp['price'];
                     $rpPrice   = $rpHasSale ? $rp['sale_price'] : $rp['price'];
-                    $rpImg     = !empty($rp['primary_image']) ? '/' . $rp['primary_image'] : '/public/assets/img/no-image.png';
+                    $rpImg     = getProductImageUrl($rp['primary_image'] ?? null);
                     ?>
                     <div class="col">
                         <a href="<?= BASE_URL ?>/product/<?= $rp['id'] ?>" class="text-decoration-none">

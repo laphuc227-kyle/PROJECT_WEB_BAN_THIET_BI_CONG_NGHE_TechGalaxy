@@ -30,9 +30,7 @@ if (!function_exists('renderProductCard')) {
         $base       = defined('BASE_URL') ? BASE_URL : '';
 
         // Xử lý ảnh: Ưu tiên primary_image từ DB, nếu không có lấy ảnh mặc định
-        $imgUrl = !empty($p['primary_image']) 
-            ? $base . '/' . ltrim($p['primary_image'], '/') 
-            : (!empty($p['image']) ? $p['image'] : $base . '/public/assets/img/no-image.png');
+        $imgUrl = getProductImageUrl($p['primary_image'] ?? $p['image'] ?? null);
 
         return "
     <div class='product-card'>

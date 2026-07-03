@@ -266,7 +266,7 @@ $brands = [
         <?php
         $hasSale = !empty($p['sale_price']) && $p['sale_price'] < $p['price'];
         $displayPrice = $hasSale ? $p['sale_price'] : $p['price'];
-        $imgSrc = !empty($p['primary_image']) ? BASE_URL . '/' . ltrim($p['primary_image'], '/') : BASE_URL . '/public/assets/img/no-image.png';
+        $imgSrc = getProductImageUrl($p['primary_image'] ?? null);
         ?>
         <div class="swiper-slide h-auto">
             <div class="product-card">
@@ -374,7 +374,7 @@ $brands = [
     <?php
     $hasSale = !empty($product['sale_price']) && $product['sale_price'] < $product['price'];
     $displayPrice = $hasSale ? $product['sale_price'] : $product['price'];
-    $imgSrc = !empty($product['primary_image']) ? BASE_URL . '/' . ltrim($product['primary_image'], '/') : BASE_URL . '/public/assets/img/no-image.png';
+    $imgSrc = getProductImageUrl($product['primary_image'] ?? null);
     ?>
     <div class="col">
       <div class="product-card">

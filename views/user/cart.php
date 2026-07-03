@@ -168,9 +168,7 @@ body{
               <tbody id="cartBody">
               <?php foreach ($items as $item):
                 $lineTotal  = (int)$item['price'] * (int)$item['quantity'];
-                $imgSrc     = !empty($item['image_path'])
-                  ? BASE_URL . '/public/uploads/products/' . htmlspecialchars($item['image_path'])
-                  : BASE_URL . '/assets/images/no-image.png';
+                  $imgSrc = getProductImageUrl($item['image_path'] ?? null);
               ?>
                 <tr class="cart-item"
                     data-product-id="<?= (int)$item['product_id'] ?>"

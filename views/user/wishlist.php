@@ -229,7 +229,7 @@
                 $hasSale = !empty($item['sale_price']) && (float)$item['sale_price'] < (float)$item['price'];
                 $displayPrice = $hasSale ? $item['sale_price'] : $item['price'];
                 $inStock = (int)($item['stock'] ?? 0) > 0;
-                $imgSrc  = !empty($item['primary_image']) ? '/' . $item['primary_image'] : '/public/assets/img/no-image.png';
+                $imgSrc  = getProductImageUrl($item['primary_image'] ?? null);
                 ?>
                 <div class="wishlist-item"
                      id="item-<?= $item['wishlist_id'] ?>"

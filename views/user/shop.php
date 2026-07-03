@@ -433,7 +433,7 @@ $isLoggedIn = !empty($_SESSION['user_id']);
                         $hasSale    = !empty($p['sale_price']) && $p['sale_price'] < $p['price'];
                         $displayPrice = $hasSale ? $p['sale_price'] : $p['price'];
                         $inStock    = (int)($p['stock'] ?? 0) > 0;
-                        $imgSrc = !empty($p['primary_image']) ? BASE_URL . '/' . ltrim($p['primary_image'], '/') : BASE_URL . '/public/assets/img/no-image.png';                        ?>
+                        $imgSrc = getProductImageUrl($p['primary_image'] ?? null);                        ?>
                         <div class="col">
                             <div class="product-card">
                                 <!-- Ảnh -->

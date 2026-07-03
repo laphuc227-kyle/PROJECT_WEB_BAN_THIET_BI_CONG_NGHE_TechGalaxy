@@ -373,4 +373,3 @@ function updateOrderStatus(orderId, newStatus) {
 </script>
 <?php
 $extraJS = ob_get_clean();
-require __DIR__ . '/../../../includes/footer.php';

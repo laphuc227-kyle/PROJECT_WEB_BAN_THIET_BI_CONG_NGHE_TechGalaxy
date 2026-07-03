@@ -290,4 +290,3 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/techgalaxy/includes/sidebar.php';
   </div><!-- /admin-main -->
 </div><!-- /admin-content -->
 
-<?php require __DIR__ . '/../../../includes/footer.php'; ?>

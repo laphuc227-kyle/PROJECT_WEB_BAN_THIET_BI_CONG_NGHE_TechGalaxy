@@ -110,12 +110,15 @@ class ReportController
         header('Expires: 0');
 
         $out = fopen('php://output', 'w');
+        
+        // Ghi BOM để chống lỗi font
         fwrite($out, $bom);
 
-        // Header
-        fputcsv($out, ['Mã đơn', 'Ngày đặt', 'Khách hàng', 'Email', 'Tổng tiền', 'Trạng thái', 'Thanh toán']);
+        // Header - THÊM DẤU CHẤM PHẨY (;) VÀO CUỐI
+        fputcsv($out, ['Mã đơn', 'Ngày đặt', 'Khách hàng', 'Email', 'Tổng tiền', 'Trạng thái', 'Thanh toán'], ';');
 
         foreach ($rows as $row) {
+            // Data - THÊM DẤU CHẤM PHẨY (;) VÀO CUỐI
             fputcsv($out, [
                 '#' . $row['id'],
                 date('d/m/Y H:i', strtotime($row['created_at'])),
@@ -124,7 +127,7 @@ class ReportController
                 number_format((float) $row['total'], 0, ',', '.') . ' ₫',
                 $this->translateStatus($row['status']),
                 $row['payment_method'] === 'cod' ? 'Tiền mặt (COD)' : 'Chuyển khoản',
-            ]);
+            ], ';');
         }
 
         fclose($out);

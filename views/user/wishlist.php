@@ -176,7 +176,7 @@
 <!-- NAVBAR -->
 <nav class="navbar navbar-expand-lg sticky-top shadow-sm">
     <div class="container">
-        <a class="navbar-brand" href="/"><i class="bi bi-stars me-1"></i>TechGalaxy</a>
+        <a class="navbar-brand" href="<?= BASE_URL ?>/"><i class="bi bi-stars me-1"></i>TechGalaxy</a>
         <div class="ms-auto d-flex align-items-center gap-2">
             <a href="<?= BASE_URL ?>/shop" class="btn btn-outline-primary btn-sm">Tiếp tục mua sắm</a>
             <a href="<?= BASE_URL ?>/logout" class="btn btn-outline-secondary btn-sm">Đăng xuất</a>
@@ -348,7 +348,7 @@ function checkEmpty() {
                 <div class="empty-state__icon"><i class="bi bi-heart"></i></div>
                 <h4>Danh sách yêu thích trống</h4>
                 <p class="mb-4">Hãy khám phá shop và thêm sản phẩm yêu thích.</p>
-                <a href="/shop" class="btn btn-primary px-4">
+                <a href="<?= BASE_URL ?>/shop" class="btn btn-primary px-4">
                     <i class="bi bi-shop me-1"></i>Khám phá ngay
                 </a>
             </div>
